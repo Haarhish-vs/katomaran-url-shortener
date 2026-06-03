@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import prisma from './config/db.js';
 import authRoutes from './auth/auth.routes.js';
+import urlRoutes from './url/url.routes.js';
 
 dotenv.config();
 
@@ -10,6 +11,7 @@ const app = express();
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
+app.use('/api/urls', urlRoutes);
 
 app.get('/', async (req, res) => {
   try {
