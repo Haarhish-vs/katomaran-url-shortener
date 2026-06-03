@@ -19,25 +19,11 @@ export async function getUrlAnalytics({ shortCode, userId }) {
 		throw err;
 	}
 
-	const url = await prisma.url.findFirst({
-		where: {
-			shortCode,
-			userId
-		},
+	const url = await prisma.url.findUnique({
+		where: { shortCode },
 		select: {
 			id: true,
-			originalUrl: true,
-			shortCode: true,
-			createdAt: true,
-			visits: {
-				select: {
-					id: true,
-					clickedAt: true
-				},
-				orderBy: {
-					clickedAt: 'desc'
-				}
-			}
+			userId: true
 		}
 	});
 
@@ -47,14 +33,32 @@ export async function getUrlAnalytics({ shortCode, userId }) {
 		throw err;
 	}
 
+	if (url.userId !== userId) {
+		const err = new Error('Forbidden');
+		err.statusCode = 403;
+		throw err;
+	}
+
+	const [totalClickCount, recentVisitHistory] = await Promise.all([
+		prisma.visit.count({
+			where: { urlId: url.id }
+		}),
+		prisma.visit.findMany({
+			where: { urlId: url.id },
+			select: {
+				id: true,
+				clickedAt: true
+			},
+			orderBy: {
+				clickedAt: 'desc'
+			},
+			take: 10
+		})
+	]);
+
 	return {
-		url: {
-			id: url.id,
-			originalUrl: url.originalUrl,
-			shortCode: url.shortCode,
-			createdAt: url.createdAt
-		},
-		totalClicks: url.visits.length,
-		visits: url.visits
+		totalClickCount,
+		lastVisitedTime: recentVisitHistory[0]?.clickedAt || null,
+		recentVisitHistory
 	};
 }
