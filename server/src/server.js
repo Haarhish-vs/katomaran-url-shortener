@@ -5,7 +5,7 @@ import authRoutes from './auth/auth.routes.js';
 import analyticsRoutes from './analytics/analytics.routes.js';
 import errorMiddleware from './middleware/error.middleware.js';
 import urlRoutes from './url/url.routes.js';
-import { redirectUrl } from './url/url.controller.js';
+import { redirectUrl } from './url/redirect-url/redirect-url.controller.js';
 import logger from './utils/logger.js';
 
 dotenv.config();

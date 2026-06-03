@@ -1,0 +1,1 @@
+// Password protection routes placeholder

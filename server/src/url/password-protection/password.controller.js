@@ -1,0 +1,1 @@
+// Password protection controller placeholder

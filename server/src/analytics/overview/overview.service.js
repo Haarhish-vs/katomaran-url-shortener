@@ -1,5 +1,9 @@
-import prisma from '../config/db.js';
-import logger from '../utils/logger.js';
+import prisma from '../../config/db.js';
+import logger from '../../utils/logger.js';
+import { buildDateFilter } from '../date-filter/date-filter.service.js';
+import { getClickCount } from '../click-count/click-count.service.js';
+import { getRecentVisits } from '../recent-visits/recent-visits.service.js';
+import { getLastVisitTime } from '../last-visit/last-visit.service.js';
 
 export async function recordVisit(urlId) {
 	return prisma.visit.create({
@@ -13,7 +17,7 @@ function validateShortCode(shortCode) {
 	return typeof shortCode === 'string' && /^[A-Za-z0-9]+$/.test(shortCode);
 }
 
-export async function getUrlAnalytics({ shortCode, userId }) {
+export async function getUrlAnalytics({ shortCode, userId, range, from, to }) {
 	if (!validateShortCode(shortCode)) {
 		logger.warn('[ANALYTICS]', 'Analytics Retrieval Failed', { shortCode, userId, reason: 'Invalid short code' });
 		const err = new Error('Analytics not found');
@@ -45,26 +49,21 @@ export async function getUrlAnalytics({ shortCode, userId }) {
 
 	logger.success('[ANALYTICS]', 'Ownership Verified', { shortCode, userId, urlId: url.id });
 
+	const dateFilter = buildDateFilter({ userId, range, from, to });
+
+	const queryWhere = {
+		urlId: url.id,
+		...(Object.keys(dateFilter).length > 0 ? { clickedAt: dateFilter } : {})
+	};
+
 	const [totalClickCount, recentVisitHistory] = await Promise.all([
-		prisma.visit.count({
-			where: { urlId: url.id }
-		}),
-		prisma.visit.findMany({
-			where: { urlId: url.id },
-			select: {
-				id: true,
-				clickedAt: true
-			},
-			orderBy: {
-				clickedAt: 'desc'
-			},
-			take: 10
-		})
+		getClickCount(queryWhere),
+		getRecentVisits(queryWhere)
 	]);
 
 	return {
 		totalClickCount,
-		lastVisitedTime: recentVisitHistory[0]?.clickedAt || null,
+		lastVisitedTime: getLastVisitTime(recentVisitHistory),
 		recentVisitHistory
 	};
 }
