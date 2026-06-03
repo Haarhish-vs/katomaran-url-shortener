@@ -1,8 +1,8 @@
 const express = require('express');
 
-const authRoutes = require('./routes/auth.routes');
-const urlRoutes = require('./routes/url.routes');
-const analyticsRoutes = require('./routes/analytics.routes');
+const authRoutes = require('./auth/auth.routes');
+const urlRoutes = require('./url/url.routes');
+const analyticsRoutes = require('./analytics/analytics.routes');
 const notFoundMiddleware = require('./middleware/notFound.middleware');
 const errorMiddleware = require('./middleware/error.middleware');
 
