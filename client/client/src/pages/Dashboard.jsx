@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import UrlTable from '../components/UrlTable'
-import CreateLinkModal from '../components/CreateLinkModal'
+import CreateLinkModal from '../features/create-link/CreateLinkModal'
 import { AuthContext } from '../context/AuthContext'
 import { deleteShortUrl, getUserUrls } from '../services/url.api'
 
@@ -73,6 +73,7 @@ export default function Dashboard() {
   const [pendingDeleteUrl, setPendingDeleteUrl] = useState(null)
   const [toast, setToast] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [activeQrUrl, setActiveQrUrl] = useState(null)
 
   const visibleUrls = isAuthenticated ? urls : []
   const totalClicks = visibleUrls.reduce((sum, url) => sum + (url.totalClicks || 0), 0)
@@ -121,7 +122,10 @@ export default function Dashboard() {
   ]
 
   useEffect(() => {
-    if (!isAuthenticated) return undefined
+    if (!isAuthenticated) {
+      const timeoutId = setTimeout(() => setUrls([]), 0)
+      return () => clearTimeout(timeoutId)
+    }
 
     let isMounted = true
 
@@ -196,6 +200,7 @@ export default function Dashboard() {
           originalUrl: createdUrl.originalUrl,
           shortCode: createdUrl.shortCode,
           shortUrl: createdUrl.shortUrl,
+          qrCode: createdUrl.qrCode,
           startDate: createdUrl.startDate ?? null,
           expiresAt: createdUrl.expiresAt ?? null,
           isPasswordProtected: createdUrl.isPasswordProtected,
@@ -274,11 +279,13 @@ export default function Dashboard() {
       <Toast toast={toast} onClose={() => setToast(null)} />
 
       {/* Create Smart Link Modal */}
-      <CreateLinkModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onCreated={handleModalCreated}
-      />
+      {isModalOpen && (
+        <CreateLinkModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onCreated={handleModalCreated}
+        />
+      )}
 
       {/* Delete confirmation dialog */}
       {pendingDeleteUrl ? (
@@ -384,6 +391,7 @@ export default function Dashboard() {
             onDelete={handleDelete}
             onOpenAnalytics={handleOpenAnalytics}
             onAuthRequired={openAuthToast}
+            onShowQr={setActiveQrUrl}
           />
         )}
 
@@ -412,6 +420,71 @@ export default function Dashboard() {
           </div>
         </section>
       </main>
+
+      {/* QR Code Modal */}
+      {activeQrUrl && (
+        <div 
+          className="fixed inset-0 z-50 grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm"
+          style={{ animation: 'fadeIn 200ms ease-out' }}
+          onClick={() => setActiveQrUrl(null)}
+        >
+          <div 
+            className="w-full max-w-sm rounded-3xl border border-white/10 bg-slate-900/95 p-6 shadow-2xl shadow-slate-950/50 text-center relative"
+            style={{ animation: 'slideUp 300ms ease-out' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="inline-flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+                  Smart Link QR Code
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveQrUrl(null)}
+                className="grid h-8 w-8 place-items-center rounded-lg text-slate-500 transition-all hover:bg-white/10 hover:text-white"
+                aria-label="Close modal"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                </svg>
+              </button>
+            </div>
+
+            <h3 className="text-xl font-bold text-white tracking-tight">QR Code</h3>
+            <p className="mt-1.5 text-xs font-mono text-cyan-300 break-all select-all">{activeQrUrl.shortUrl}</p>
+            
+            <div className="mt-5 flex justify-center bg-white p-4 rounded-2xl w-fit mx-auto shadow-inner border border-white/10">
+              <img src={activeQrUrl.qrCode} alt="QR Code" className="h-44 w-44 rounded-lg" />
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setActiveQrUrl(null)}
+                className="flex-1 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold text-slate-300 transition-all hover:bg-white/10 hover:text-white active:scale-[0.98]"
+              >
+                Close
+              </button>
+              <a
+                href={activeQrUrl.qrCode}
+                download={`qrcode-${activeQrUrl.shortCode}.png`}
+                className="flex-1 inline-flex items-center justify-center rounded-xl bg-cyan-400 py-3 text-sm font-bold text-slate-950 transition-all hover:bg-cyan-300 active:scale-[0.98] shadow-lg shadow-cyan-400/10"
+              >
+                Download
+              </a>
+            </div>
+          </div>
+          <style>{`
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes slideUp {
+              from { opacity: 0; transform: translateY(16px) scale(0.97); }
+              to   { opacity: 1; transform: translateY(0) scale(1); }
+            }
+          `}</style>
+        </div>
+      )}
     </div>
   )
 }

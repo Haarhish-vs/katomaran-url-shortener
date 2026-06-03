@@ -1,6 +1,7 @@
 import prisma from '../../config/db.js';
 import logger from '../../utils/logger.js';
 import { hashPassword } from '../../utils/hash.js';
+import QRCode from 'qrcode';
 
 export function validateCustomAlias(alias) {
 	if (typeof alias !== 'string') return false;
@@ -56,12 +57,16 @@ export async function handleCustomAlias({ originalUrl, userId, customAlias, star
 	}
 
 	const base = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
+	const shortUrl = `${base}/${created.shortCode}`;
+	const qrCode = await QRCode.toDataURL(shortUrl);
+
 	logger.success('[URL]', 'URL Stored with Custom Alias', { userId, shortCode: created.shortCode, urlId: created.id });
 	return {
 		id: created.id,
 		originalUrl: created.originalUrl,
 		shortCode: created.shortCode,
-		shortUrl: `${base}/${created.shortCode}`,
+		shortUrl,
+		qrCode,
 		isPasswordProtected: created.isPasswordProtected,
 		...(created.startDate ? { startDate: created.startDate } : {}),
 		...(created.expiresAt ? { expiresAt: created.expiresAt } : {})

@@ -4,6 +4,7 @@ import logger from '../../utils/logger.js';
 import { handleCustomAlias } from '../custom-alias/custom-alias.service.js';
 import { validateDates } from '../expiry/expiry.service.js';
 import { hashPassword } from '../../utils/hash.js';
+import QRCode from 'qrcode';
 
 function validateUrlFormat(value) {
 	try {
@@ -73,6 +74,9 @@ export async function createUrlService({ originalUrl, userId, customAlias, start
 			});
 
 			const base = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
+			const shortUrl = `${base}/${updated.shortCode}`;
+			const qrCode = await QRCode.toDataURL(shortUrl);
+
 			logger.success('[URL]', 'URL Stored', {
 				userId,
 				shortCode: updated.shortCode,
@@ -86,7 +90,8 @@ export async function createUrlService({ originalUrl, userId, customAlias, start
 				id: updated.id,
 				originalUrl: updated.originalUrl,
 				shortCode: updated.shortCode,
-				shortUrl: `${base}/${updated.shortCode}`,
+				shortUrl,
+				qrCode,
 				isPasswordProtected: updated.isPasswordProtected,
 				...(updated.startDate ? { startDate: updated.startDate } : {}),
 				...(updated.expiresAt ? { expiresAt: updated.expiresAt } : {}),

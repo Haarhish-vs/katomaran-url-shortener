@@ -14,6 +14,7 @@ export default function UrlTable({
   onDelete,
   onOpenAnalytics,
   onAuthRequired,
+  onShowQr,
 }) {
   if (!isAuthenticated) {
     return (
@@ -121,6 +122,14 @@ export default function UrlTable({
                     className="rounded-full border border-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     Copy
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onShowQr(url)}
+                    disabled={activeActionId === url.id}
+                    className="rounded-full border border-white/10 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    QR Code
                   </button>
                   <button
                     type="button"
