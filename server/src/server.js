@@ -1,20 +1,25 @@
-import express from "express";
-import dotenv from "dotenv";
-import prisma from "./config/db.js";
+import express from 'express';
+import dotenv from 'dotenv';
+import prisma from './config/db.js';
+import authRoutes from './auth/auth.routes.js';
 
 dotenv.config();
 
 const app = express();
 
-app.get("/", async (req, res) => {
+app.use(express.json());
+
+app.use('/api/auth', authRoutes);
+
+app.get('/', async (req, res) => {
   try {
     const userCount = await prisma.user.count();
 
     res.status(200).json({
       success: true,
-      database: "Connected",
+      database: 'Connected',
       users: userCount,
-      message: "Backend Running Successfully"
+      message: 'Backend Running Successfully'
     });
   } catch (error) {
     res.status(500).json({
@@ -24,7 +29,7 @@ app.get("/", async (req, res) => {
   }
 });
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
