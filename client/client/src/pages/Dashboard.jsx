@@ -178,7 +178,7 @@ export default function Dashboard() {
     })
   }
 
-  const handleCreateUrl = async (originalUrl) => {
+  const handleCreateUrl = async (payload) => {
     if (!isAuthenticated) {
       openAuthToast('Please sign in to continue')
       return
@@ -187,7 +187,7 @@ export default function Dashboard() {
     setIsSubmitting(true)
 
     try {
-      const createdUrl = await createShortUrl({ originalUrl })
+      const createdUrl = await createShortUrl(payload)
       setUrls((currentUrls) => [createdUrl, ...currentUrls])
       showSuccessToast('Short URL created successfully.')
     } catch (error) {

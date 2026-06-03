@@ -11,12 +11,14 @@ function isValidHttpUrl(value) {
 
 export default function UrlForm({ isAuthenticated, isSubmitting, onSubmit, onAuthRequired }) {
   const [originalUrl, setOriginalUrl] = useState('')
+  const [customAlias, setCustomAlias] = useState('')
   const [validationError, setValidationError] = useState('')
 
   const handleSubmit = async (event) => {
     event.preventDefault()
 
     const trimmedUrl = originalUrl.trim()
+    const trimmedAlias = customAlias.trim()
 
     if (!trimmedUrl) {
       setValidationError('Enter a URL to shorten.')
@@ -28,6 +30,22 @@ export default function UrlForm({ isAuthenticated, isSubmitting, onSubmit, onAut
       return
     }
 
+    if (trimmedAlias) {
+      if (!/^[A-Za-z0-9\-_]+$/.test(trimmedAlias)) {
+        setValidationError('Alias can only contain letters, numbers, hyphens, and underscores.')
+        return
+      }
+      if (trimmedAlias.length < 3 || trimmedAlias.length > 30) {
+        setValidationError('Alias must be between 3 and 30 characters.')
+        return
+      }
+      const reserved = ['api', 'login', 'signup', 'analytics', 'assets', 'dashboard']
+      if (reserved.includes(trimmedAlias.toLowerCase())) {
+        setValidationError('This alias is reserved for system use.')
+        return
+      }
+    }
+
     setValidationError('')
 
     if (!isAuthenticated) {
@@ -35,8 +53,14 @@ export default function UrlForm({ isAuthenticated, isSubmitting, onSubmit, onAut
       return
     }
 
-    await onSubmit(trimmedUrl)
+    const payload = { originalUrl: trimmedUrl }
+    if (trimmedAlias) {
+      payload.customAlias = trimmedAlias
+    }
+
+    await onSubmit(payload)
     setOriginalUrl('')
+    setCustomAlias('')
   }
 
   return (
@@ -48,9 +72,9 @@ export default function UrlForm({ isAuthenticated, isSubmitting, onSubmit, onAut
         </p>
       </div>
 
-      <div className="flex flex-col gap-3 md:flex-row">
-        <label className="flex-1">
-          <span className="sr-only">Long URL</span>
+      <div className="flex flex-col gap-4">
+        <label className="block">
+          <span className="mb-2 block text-sm font-medium text-slate-300">Long URL</span>
           <input
             type="url"
             value={originalUrl}
@@ -61,10 +85,27 @@ export default function UrlForm({ isAuthenticated, isSubmitting, onSubmit, onAut
           />
         </label>
 
+        <label className="block">
+          <span className="mb-2 block text-sm font-medium text-slate-300">Custom Alias (Optional)</span>
+          <div className="flex rounded-2xl border border-white/10 bg-slate-950 overflow-hidden focus-within:border-cyan-400/50 focus-within:ring-2 focus-within:ring-cyan-400/20">
+            <span className="flex items-center px-4 border-r border-white/5 bg-white/5 text-sm text-slate-400 select-none font-mono">
+              {window.location.host}/
+            </span>
+            <input
+              type="text"
+              value={customAlias}
+              onChange={(event) => setCustomAlias(event.target.value)}
+              disabled={isSubmitting}
+              placeholder="e.g. portfolio, resume, github"
+              className="flex-1 bg-transparent px-4 py-3 text-sm text-white outline-none disabled:cursor-not-allowed disabled:opacity-60 font-mono"
+            />
+          </div>
+        </label>
+
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex items-center justify-center rounded-2xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center justify-center rounded-2xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60 w-full sm:w-fit"
         >
           {isSubmitting ? (
             <>
