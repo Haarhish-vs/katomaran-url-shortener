@@ -1,29 +1,31 @@
-import React, { useContext } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Login from '../pages/Login';
-import Signup from '../pages/Signup';
-import Dashboard from '../pages/Dashboard';
-import Analytics from '../pages/Analytics';
-import ProtectedRoute from '../components/ProtectedRoute';
-import { AuthContext } from '../context/AuthContext';
+import { useContext } from 'react'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import ProtectedRoute from '../components/ProtectedRoute'
+import { AuthContext } from '../context/AuthContext'
+import Analytics from '../pages/Analytics'
+import Dashboard from '../pages/Dashboard'
+import Login from '../pages/Login'
+import Signup from '../pages/Signup'
 
 export default function AppRoutes() {
-  const { user } = useContext(AuthContext);
+  const { isAuthenticated } = useContext(AuthContext)
 
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<Dashboard />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route
-          path="/"
-          element={<ProtectedRoute isAuthenticated={!!user}><Dashboard /></ProtectedRoute>}
+          path="/analytics/:shortCode"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <Analytics />
+            </ProtectedRoute>
+          }
         />
-        <Route
-          path="/analytics/:id"
-          element={<ProtectedRoute isAuthenticated={!!user}><Analytics /></ProtectedRoute>}
-        />
+        <Route path="*" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>
-  );
+  )
 }

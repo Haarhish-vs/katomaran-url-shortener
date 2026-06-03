@@ -1,17 +1,11 @@
-const API_BASE = process.env.VITE_API_BASE || '';
+import apiClient from './apiClient'
 
 export async function login(credentials) {
-  return fetch(`${API_BASE}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(credentials),
-  }).then(r => r.json());
+  const response = await apiClient.post('/auth/login', credentials)
+  return response.data.data
 }
 
 export async function signup(data) {
-  return fetch(`${API_BASE}/auth/signup`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  }).then(r => r.json());
+  const response = await apiClient.post('/auth/signup', data)
+  return response.data.data
 }

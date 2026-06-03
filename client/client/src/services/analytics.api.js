@@ -1,5 +1,6 @@
-const API_BASE = process.env.VITE_API_BASE || '';
+import apiClient from './apiClient'
 
-export async function fetchAnalytics(shortId) {
-  return fetch(`${API_BASE}/analytics/${shortId}`).then(r => r.json());
+export async function fetchAnalytics(shortCode) {
+  const response = await apiClient.get(`/analytics/${shortCode}`)
+  return response.data.data
 }

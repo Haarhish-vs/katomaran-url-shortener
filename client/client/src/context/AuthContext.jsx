@@ -1,17 +1,32 @@
-import React, { createContext, useState, useEffect } from 'react';
+import { createContext, useState } from 'react'
+import { getToken, removeToken, setToken } from '../utils/token'
 
-export const AuthContext = createContext(null);
+// eslint-disable-next-line react-refresh/only-export-components
+export const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [token, setTokenState] = useState(() => getToken())
 
-  useEffect(() => {
-    // placeholder: load user from token/localStorage
-  }, []);
+  const signIn = (nextToken) => {
+    setToken(nextToken)
+    setTokenState(nextToken)
+  }
+
+  const signOut = () => {
+    removeToken()
+    setTokenState(null)
+  }
 
   return (
-    <AuthContext.Provider value={{ user, setUser }}>
+    <AuthContext.Provider
+      value={{
+        token,
+        isAuthenticated: Boolean(token),
+        signIn,
+        signOut,
+      }}
+    >
       {children}
     </AuthContext.Provider>
-  );
+  )
 }
