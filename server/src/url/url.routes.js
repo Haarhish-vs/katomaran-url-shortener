@@ -1,6 +1,6 @@
 import express from 'express';
 import authMiddleware from '../middleware/auth.middleware.js';
-import { createUrl, getUserUrls } from './url.controller.js';
+import { createUrl, deleteUrl, getUserUrls } from './url.controller.js';
 
 const router = express.Router();
 
@@ -9,5 +9,8 @@ router.post('/', authMiddleware, createUrl);
 
 // Get logged-in user's URLs (protected)
 router.get('/', authMiddleware, getUserUrls);
+
+// Delete a URL owned by the logged-in user (protected)
+router.delete('/:shortCode', authMiddleware, deleteUrl);
 
 export default router;
