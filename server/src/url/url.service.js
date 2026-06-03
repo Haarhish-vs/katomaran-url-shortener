@@ -110,47 +110,6 @@ export async function getUserUrlsService(userId) {
 				}
 			}
 		},
-
-		export async function deleteUrlService({ shortCode, userId }) {
-			if (!shortCode || typeof shortCode !== 'string') {
-				const err = new Error('Short code not found');
-				err.statusCode = 404;
-				throw err;
-			}
-
-			const url = await prisma.url.findUnique({
-				where: { shortCode },
-				select: {
-					id: true,
-					userId: true
-				}
-			});
-
-			if (!url) {
-				const err = new Error('Short code not found');
-				err.statusCode = 404;
-				throw err;
-			}
-
-			if (url.userId !== userId) {
-				const err = new Error('Forbidden');
-				err.statusCode = 403;
-				throw err;
-			}
-
-			await prisma.$transaction([
-				prisma.visit.deleteMany({
-					where: { urlId: url.id }
-				}),
-				prisma.url.delete({
-					where: { id: url.id }
-				})
-			]);
-
-			return {
-				shortCode
-			};
-		}
 		orderBy: {
 			createdAt: 'desc'
 		}
@@ -167,5 +126,46 @@ export async function getUserUrlsService(userId) {
 			createdAt: url.createdAt,
 			totalClicks: url._count.visits
 		}))
+	};
+}
+
+export async function deleteUrlService({ shortCode, userId }) {
+	if (!shortCode || typeof shortCode !== 'string') {
+		const err = new Error('Short code not found');
+		err.statusCode = 404;
+		throw err;
+	}
+
+	const url = await prisma.url.findUnique({
+		where: { shortCode },
+		select: {
+			id: true,
+			userId: true
+		}
+	});
+
+	if (!url) {
+		const err = new Error('Short code not found');
+		err.statusCode = 404;
+		throw err;
+	}
+
+	if (url.userId !== userId) {
+		const err = new Error('Forbidden');
+		err.statusCode = 403;
+		throw err;
+	}
+
+	await prisma.$transaction([
+		prisma.visit.deleteMany({
+			where: { urlId: url.id }
+		}),
+		prisma.url.delete({
+			where: { id: url.id }
+		})
+	]);
+
+	return {
+		shortCode
 	};
 }

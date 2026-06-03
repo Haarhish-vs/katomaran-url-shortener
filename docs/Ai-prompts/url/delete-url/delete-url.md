@@ -1,6 +1,6 @@
 ROLE
 
-Act as a Senior Backend Engineer implementing User URL Retrieval.
+Act as a Senior Backend Engineer implementing URL Deletion.
 
 PROJECT
 
@@ -13,30 +13,32 @@ REFERENCE DOCUMENTS
 
 IMPORTANT
 
-Use the authenticated user from JWT middleware.
+Only the URL owner can delete a URL.
 
 CURRENT STATUS
 
 * JWT Middleware completed
 * Create URL completed
+* Get User URLs completed
 
 TASK
 
-Implement Get User URLs.
+Implement Delete URL.
 
 FLOW REQUIREMENTS
 
 JWT Verification
-→ Extract User ID
-→ Query User URLs
-→ Return URL List
+→ URL Lookup
+→ Ownership Verification
+→ Delete URL
+→ Success Response
 
 REQUIREMENTS
 
 * Protected route only
-* Never accept userId from request body
-* Use authenticated user from JWT
-* Return only URLs belonging to the logged-in user
+* Verify ownership before deletion
+* Return 404 if URL not found
+* Return 403 if ownership check fails
 * No dead code
 * No unused imports
 
