@@ -1,5 +1,6 @@
 import { redirectUrlService } from './redirect-url.service.js';
 import logger from '../../utils/logger.js';
+import config from '../../config/env.js';
 
 export async function redirectUrl(req, res, next) {
 	try {
@@ -17,8 +18,7 @@ export async function redirectUrl(req, res, next) {
 		if (result.passwordRequired) {
 			const acceptHeader = req.headers.accept || '';
 			if (acceptHeader.includes('text/html')) {
-				const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-				return res.redirect(302, `${frontendUrl}/protected/${shortCode}`);
+				return res.redirect(302, `${config.frontendUrl}/protected/${shortCode}`);
 			}
 			return res.status(401).json({
 				success: false,

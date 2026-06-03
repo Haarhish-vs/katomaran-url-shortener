@@ -1,4 +1,5 @@
 import prisma from '../../config/db.js';
+import config from '../../config/env.js';
 import logger from '../../utils/logger.js';
 import { hashPassword } from '../../utils/hash.js';
 import QRCode from 'qrcode';
@@ -56,7 +57,7 @@ export async function handleCustomAlias({ originalUrl, userId, customAlias, star
 		logger.info('[PASSWORD_PROTECTION]', 'Protected URL Created', { userId, urlId: created.id });
 	}
 
-	const base = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
+	const base = config.baseUrl;
 	const shortUrl = `${base}/${created.shortCode}`;
 	const qrCode = await QRCode.toDataURL(shortUrl);
 

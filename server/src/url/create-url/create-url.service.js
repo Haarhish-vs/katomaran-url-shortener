@@ -1,4 +1,5 @@
 import prisma from '../../config/db.js';
+import config from '../../config/env.js';
 import { encodeBuffer } from '../../utils/base62.js';
 import logger from '../../utils/logger.js';
 import { handleCustomAlias } from '../custom-alias/custom-alias.service.js';
@@ -73,7 +74,7 @@ export async function createUrlService({ originalUrl, userId, customAlias, start
 				data: { shortCode },
 			});
 
-			const base = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
+			const base = config.baseUrl;
 			const shortUrl = `${base}/${updated.shortCode}`;
 			const qrCode = await QRCode.toDataURL(shortUrl);
 

@@ -1,4 +1,5 @@
 import prisma from '../../config/db.js';
+import config from '../../config/env.js';
 import logger from '../../utils/logger.js';
 import QRCode from 'qrcode';
 
@@ -24,7 +25,7 @@ export async function getUserUrlsService(userId) {
 		},
 	});
 
-	const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
+	const baseUrl = config.baseUrl;
 	logger.success('[URL]', 'User URLs Retrieved', { userId, totalUrls: urls.length });
 
 	const urlsWithQr = await Promise.all(
