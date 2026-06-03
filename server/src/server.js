@@ -14,9 +14,30 @@ dotenv.config();
 
 const app = express();
 
+const rawFrontendUrl = (process.env.FRONTEND_URL || '').replace(/['"\r\n]/g, '').trim();
+const allowedOrigins = rawFrontendUrl ? rawFrontendUrl.split(',').map(o => o.trim()) : [];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || '*',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, or postman)
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      // Check if origin matches whitelisted hosts, or matches wildcard, or matches Vercel project subdomains
+      const isAllowed =
+        allowedOrigins.length === 0 ||
+        allowedOrigins.includes('*') ||
+        allowedOrigins.includes(origin) ||
+        /^https:\/\/katomaran-url-shortener.*\.vercel\.app$/.test(origin);
+
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   })
 );
