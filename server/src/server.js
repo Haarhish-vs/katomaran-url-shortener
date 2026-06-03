@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import prisma from './config/db.js';
 import authRoutes from './auth/auth.routes.js';
+import analyticsRoutes from './analytics/analytics.routes.js';
 import urlRoutes from './url/url.routes.js';
 import { redirectUrl } from './url/url.controller.js';
 
@@ -13,6 +14,7 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/urls', urlRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 app.get('/:shortCode', redirectUrl);
 
