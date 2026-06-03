@@ -24,7 +24,7 @@ export function encodeBuffer(buf) {
 
 export function generateRandomBase62(length = 8) {
 	const bytes = crypto.randomBytes(Math.ceil((length * Math.log2(62)) / 8));
-	const encoded = encodeBuffer(bytes);
+	let encoded = encodeBuffer(bytes);
 	// Ensure the returned string has at least `length` characters
 	if (encoded.length >= length) return encoded.slice(0, length);
 	// pad by generating more if necessary

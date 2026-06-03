@@ -1,6 +1,7 @@
 import prisma from '../config/db.js';
-import { generateRandomBase62 } from '../utils/base62.js';
+import { encodeBuffer } from '../utils/base62.js';
 import { recordVisit } from '../analytics/analytics.service.js';
+import logger from '../utils/logger.js';
 
 function validateUrlFormat(value) {
 	try {
@@ -13,12 +14,15 @@ function validateUrlFormat(value) {
 
 export async function createUrlService({ originalUrl, userId }) {
 	if (!validateUrlFormat(originalUrl)) {
+		logger.warn('[URL]', 'URL Creation Failed', { userId, reason: 'Invalid URL format' });
 		const err = new Error('Invalid URL format');
 		err.statusCode = 400;
 		throw err;
 	}
 
-	// Create initial record without shortCode
+	logger.success('[URL]', 'URL Validation Passed', { userId });
+
+	// Step 1: Create database record — DB generates the unique ID
 	const created = await prisma.url.create({
 		data: {
 			originalUrl,
@@ -26,19 +30,20 @@ export async function createUrlService({ originalUrl, userId }) {
 		}
 	});
 
-	// Generate unique shortCode and update the record
-	let shortCode;
+	// Step 2: Derive shortCode by Base62-encoding the DB-generated ID (per diagram)
+	let shortCode = encodeBuffer(Buffer.from(created.id)).slice(0, 8);
+	logger.success('[URL]', 'Short Code Generated', { userId, shortCode });
+
+	// Step 3: Update the record with the shortCode — retry on unique constraint collision
 	const maxAttempts = 5;
-	let attempt = 0;
-	while (attempt < maxAttempts) {
-		shortCode = generateRandomBase62(8);
+	for (let attempt = 0; attempt < maxAttempts; attempt++) {
 		try {
 			const updated = await prisma.url.update({
 				where: { id: created.id },
 				data: { shortCode }
 			});
-			// Success
 			const base = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
+			logger.success('[URL]', 'URL Stored', { userId, shortCode: updated.shortCode, urlId: updated.id });
 			return {
 				id: updated.id,
 				originalUrl: updated.originalUrl,
@@ -46,18 +51,14 @@ export async function createUrlService({ originalUrl, userId }) {
 				shortUrl: `${base}/${updated.shortCode}`
 			};
 		} catch (e) {
-			// If shortCode unique constraint failed, retry
-			attempt += 1;
-			if (attempt >= maxAttempts) {
-				const err = new Error('Failed to generate unique short code');
-				err.statusCode = 500;
-				throw err;
-			}
+			// Unique constraint collision — vary the input and retry
+			shortCode = encodeBuffer(Buffer.from(created.id + attempt)).slice(0, 8);
+			logger.warn('[URL]', 'Short Code Collision, Retrying', { userId, attempt: attempt + 1 });
 		}
 	}
 
-	// If we exit loop without return, throw
-	const err = new Error('Failed to generate short code');
+	logger.error('[URL]', 'URL Creation Failed', { userId, reason: 'Failed to generate unique short code' });
+	const err = new Error('Failed to generate unique short code');
 	err.statusCode = 500;
 	throw err;
 }
@@ -68,10 +69,13 @@ function validateShortCode(shortCode) {
 
 export async function redirectUrlService(shortCode) {
 	if (!validateShortCode(shortCode)) {
+		logger.warn('[URL]', 'Redirect Failed', { shortCode, reason: 'Invalid short code format' });
 		const err = new Error('Short code not found');
 		err.statusCode = 404;
 		throw err;
 	}
+
+	logger.info('[URL]', 'ShortCode Lookup', { shortCode });
 
 	const url = await prisma.url.findUnique({
 		where: { shortCode },
@@ -83,12 +87,14 @@ export async function redirectUrlService(shortCode) {
 	});
 
 	if (!url) {
+		logger.warn('[URL]', 'Redirect Failed', { shortCode, reason: 'Short code not found' });
 		const err = new Error('Short code not found');
 		err.statusCode = 404;
 		throw err;
 	}
 
 	await recordVisit(url.id);
+	logger.success('[URL]', 'Redirect Success', { shortCode, urlId: url.id });
 
 	return {
 		originalUrl: url.originalUrl,
@@ -116,6 +122,7 @@ export async function getUserUrlsService(userId) {
 	});
 
 	const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
+	logger.success('[URL]', 'User URLs Retrieved', { userId, totalUrls: urls.length });
 
 	return {
 		urls: urls.map((url) => ({
@@ -131,6 +138,7 @@ export async function getUserUrlsService(userId) {
 
 export async function deleteUrlService({ shortCode, userId }) {
 	if (!shortCode || typeof shortCode !== 'string') {
+		logger.warn('[URL]', 'URL Deleted', { userId, shortCode, reason: 'Short code not found' });
 		const err = new Error('Short code not found');
 		err.statusCode = 404;
 		throw err;
@@ -145,12 +153,14 @@ export async function deleteUrlService({ shortCode, userId }) {
 	});
 
 	if (!url) {
+		logger.warn('[URL]', 'URL Deleted', { userId, shortCode, reason: 'URL not found' });
 		const err = new Error('Short code not found');
 		err.statusCode = 404;
 		throw err;
 	}
 
 	if (url.userId !== userId) {
+		logger.warn('[URL]', 'URL Deleted', { userId, shortCode, reason: 'Forbidden' });
 		const err = new Error('Forbidden');
 		err.statusCode = 403;
 		throw err;
@@ -164,6 +174,8 @@ export async function deleteUrlService({ shortCode, userId }) {
 			where: { id: url.id }
 		})
 	]);
+
+	logger.success('[URL]', 'URL Deleted', { userId, shortCode, urlId: url.id });
 
 	return {
 		shortCode

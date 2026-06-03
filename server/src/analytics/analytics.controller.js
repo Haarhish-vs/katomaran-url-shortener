@@ -1,12 +1,16 @@
 import { getUrlAnalytics } from './analytics.service.js';
+import logger from '../utils/logger.js';
 
 export async function getAnalytics(req, res, next) {
 	try {
 		const { shortCode } = req.params || {};
 		const user = req.user;
+		logger.info('[ANALYTICS]', 'Analytics Request', { method: req.method, route: req.originalUrl, shortCode, userId: user?.id });
 
 		if (!user || !user.id) {
-			return res.status(401).json({ success: false, message: 'Unauthorized' });
+			const err = new Error('Unauthorized');
+			err.statusCode = 401;
+			return next(err);
 		}
 
 		const result = await getUrlAnalytics({ shortCode, userId: user.id });

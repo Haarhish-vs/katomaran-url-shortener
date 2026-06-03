@@ -1,16 +1,22 @@
 import { createUrlService, deleteUrlService, getUserUrlsService, redirectUrlService } from './url.service.js';
+import logger from '../utils/logger.js';
 
 export async function createUrl(req, res, next) {
 	try {
 		const { originalUrl } = req.body || {};
 		const user = req.user;
+		logger.info('[URL]', 'Create URL Request', { method: req.method, route: req.originalUrl, userId: user?.id });
 
 		if (!user || !user.id) {
-			return res.status(401).json({ success: false, message: 'Unauthorized' });
+			const err = new Error('Unauthorized');
+			err.statusCode = 401;
+			return next(err);
 		}
 
 		if (!originalUrl) {
-			return res.status(400).json({ success: false, message: 'Missing originalUrl in request body' });
+			const err = new Error('Missing originalUrl in request body');
+			err.statusCode = 400;
+			return next(err);
 		}
 
 		const result = await createUrlService({ originalUrl, userId: user.id });
@@ -27,9 +33,12 @@ export async function createUrl(req, res, next) {
 export async function redirectUrl(req, res, next) {
 	try {
 		const { shortCode } = req.params || {};
+		logger.info('[URL]', 'Redirect Request', { method: req.method, route: req.originalUrl, shortCode });
 
 		if (!shortCode) {
-			return res.status(404).json({ success: false, message: 'Not Found' });
+			const err = new Error('Not Found');
+			err.statusCode = 404;
+			return next(err);
 		}
 
 		const result = await redirectUrlService(shortCode);
@@ -46,9 +55,12 @@ export async function redirectUrl(req, res, next) {
 export async function getUserUrls(req, res, next) {
 	try {
 		const user = req.user;
+		logger.info('[URL]', 'Get User URLs Request', { method: req.method, route: req.originalUrl, userId: user?.id });
 
 		if (!user || !user.id) {
-			return res.status(401).json({ success: false, message: 'Unauthorized' });
+			const err = new Error('Unauthorized');
+			err.statusCode = 401;
+			return next(err);
 		}
 
 		const result = await getUserUrlsService(user.id);
@@ -66,9 +78,12 @@ export async function deleteUrl(req, res, next) {
 	try {
 		const { shortCode } = req.params || {};
 		const user = req.user;
+		logger.info('[URL]', 'Delete URL Request', { method: req.method, route: req.originalUrl, shortCode, userId: user?.id });
 
 		if (!user || !user.id) {
-			return res.status(401).json({ success: false, message: 'Unauthorized' });
+			const err = new Error('Unauthorized');
+			err.statusCode = 401;
+			return next(err);
 		}
 
 		const result = await deleteUrlService({ shortCode, userId: user.id });

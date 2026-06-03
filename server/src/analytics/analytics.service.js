@@ -1,4 +1,5 @@
 import prisma from '../config/db.js';
+import logger from '../utils/logger.js';
 
 export async function recordVisit(urlId) {
 	return prisma.visit.create({
@@ -14,6 +15,7 @@ function validateShortCode(shortCode) {
 
 export async function getUrlAnalytics({ shortCode, userId }) {
 	if (!validateShortCode(shortCode)) {
+		logger.warn('[ANALYTICS]', 'Analytics Retrieval Failed', { shortCode, userId, reason: 'Invalid short code' });
 		const err = new Error('Analytics not found');
 		err.statusCode = 404;
 		throw err;
@@ -28,16 +30,20 @@ export async function getUrlAnalytics({ shortCode, userId }) {
 	});
 
 	if (!url) {
+		logger.warn('[ANALYTICS]', 'Analytics Retrieval Failed', { shortCode, userId, reason: 'URL not found' });
 		const err = new Error('Analytics not found');
 		err.statusCode = 404;
 		throw err;
 	}
 
 	if (url.userId !== userId) {
+		logger.warn('[ANALYTICS]', 'Analytics Retrieval Failed', { shortCode, userId, reason: 'Forbidden' });
 		const err = new Error('Forbidden');
 		err.statusCode = 403;
 		throw err;
 	}
+
+	logger.success('[ANALYTICS]', 'Ownership Verified', { shortCode, userId, urlId: url.id });
 
 	const [totalClickCount, recentVisitHistory] = await Promise.all([
 		prisma.visit.count({

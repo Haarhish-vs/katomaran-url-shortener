@@ -3,8 +3,10 @@ import dotenv from 'dotenv';
 import prisma from './config/db.js';
 import authRoutes from './auth/auth.routes.js';
 import analyticsRoutes from './analytics/analytics.routes.js';
+import errorMiddleware from './middleware/error.middleware.js';
 import urlRoutes from './url/url.routes.js';
 import { redirectUrl } from './url/url.controller.js';
+import logger from './utils/logger.js';
 
 dotenv.config();
 
@@ -36,8 +38,16 @@ app.get('/', async (req, res) => {
   }
 });
 
+app.use((req, res, next) => {
+  const err = new Error('Route not found');
+  err.statusCode = 404;
+  return next(err);
+});
+
+app.use(errorMiddleware);
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  logger.success('[SERVER]', 'Server Running', { port: PORT });
 });

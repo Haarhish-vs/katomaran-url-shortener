@@ -22,7 +22,7 @@ model Url {
   id           String   @id @default(cuid())
 
   originalUrl  String
-  shortCode    String   @unique
+  shortCode    String?  @unique
 
   userId       String
   user         User     @relation(fields: [userId], references: [id])
