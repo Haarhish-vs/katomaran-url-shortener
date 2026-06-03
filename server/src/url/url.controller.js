@@ -1,4 +1,4 @@
-import { createUrlService, redirectUrlService } from './url.service.js';
+import { createUrlService, getUserUrlsService, redirectUrlService } from './url.service.js';
 
 export async function createUrl(req, res, next) {
 	try {
@@ -35,6 +35,25 @@ export async function redirectUrl(req, res, next) {
 		const result = await redirectUrlService(shortCode);
 
 		return res.redirect(302, result.originalUrl);
+	} catch (err) {
+		if (err && err.statusCode) {
+			return res.status(err.statusCode).json({ success: false, message: err.message });
+		}
+		return next(err);
+	}
+}
+
+export async function getUserUrls(req, res, next) {
+	try {
+		const user = req.user;
+
+		if (!user || !user.id) {
+			return res.status(401).json({ success: false, message: 'Unauthorized' });
+		}
+
+		const result = await getUserUrlsService(user.id);
+
+		return res.status(200).json({ success: true, data: result });
 	} catch (err) {
 		if (err && err.statusCode) {
 			return res.status(err.statusCode).json({ success: false, message: err.message });
