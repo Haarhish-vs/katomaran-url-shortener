@@ -25,3 +25,31 @@ export async function signupService({ email, password }) {
 
 	return { user: { id: user.id, email: user.email }, token };
 }
+
+export async function loginService({ email, password }) {
+	const user = await prisma.user.findUnique({
+		where: { email },
+		select: {
+			id: true,
+			email: true,
+			passwordHash: true
+		}
+	});
+
+	if (!user) {
+		const err = new Error('User not found');
+		err.statusCode = 404;
+		throw err;
+	}
+
+	const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+	if (!isPasswordValid) {
+		const err = new Error('Invalid password');
+		err.statusCode = 401;
+		throw err;
+	}
+
+	const token = signToken({ id: user.id, email: user.email });
+
+	return { user: { id: user.id, email: user.email }, token };
+}
