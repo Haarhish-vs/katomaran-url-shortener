@@ -1,5 +1,6 @@
 import prisma from '../../config/db.js';
 import logger from '../../utils/logger.js';
+import { hashPassword } from '../../utils/hash.js';
 
 export function validateCustomAlias(alias) {
 	if (typeof alias !== 'string') return false;
@@ -13,7 +14,7 @@ export function validateCustomAlias(alias) {
 	return true;
 }
 
-export async function handleCustomAlias({ originalUrl, userId, customAlias, startDate, expiresAt }) {
+export async function handleCustomAlias({ originalUrl, userId, customAlias, startDate, expiresAt, password }) {
 	const trimmedAlias = customAlias.trim();
 	if (!validateCustomAlias(trimmedAlias)) {
 		logger.warn('[URL]', 'URL Creation Failed', { userId, reason: 'Invalid custom alias format', customAlias });
@@ -33,15 +34,26 @@ export async function handleCustomAlias({ originalUrl, userId, customAlias, star
 		throw err;
 	}
 
+	let hashedPassword = null;
+	if (password !== undefined && password !== null) {
+		// Note: createUrlService already validated that password is not empty if provided
+		hashedPassword = await hashPassword(password);
+	}
+
 	const created = await prisma.url.create({
 		data: {
 			originalUrl,
 			userId,
 			shortCode: trimmedAlias,
 			...(startDate ? { startDate: new Date(startDate) } : {}),
-			...(expiresAt ? { expiresAt: new Date(expiresAt) } : {})
+			...(expiresAt ? { expiresAt: new Date(expiresAt) } : {}),
+			...(hashedPassword ? { isPasswordProtected: true, passwordHash: hashedPassword } : {}),
 		}
 	});
+
+	if (hashedPassword) {
+		logger.info('[PASSWORD_PROTECTION]', 'Protected URL Created', { userId, urlId: created.id });
+	}
 
 	const base = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
 	logger.success('[URL]', 'URL Stored with Custom Alias', { userId, shortCode: created.shortCode, urlId: created.id });
@@ -50,6 +62,7 @@ export async function handleCustomAlias({ originalUrl, userId, customAlias, star
 		originalUrl: created.originalUrl,
 		shortCode: created.shortCode,
 		shortUrl: `${base}/${created.shortCode}`,
+		isPasswordProtected: created.isPasswordProtected,
 		...(created.startDate ? { startDate: created.startDate } : {}),
 		...(created.expiresAt ? { expiresAt: created.expiresAt } : {})
 	};

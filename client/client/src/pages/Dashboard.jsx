@@ -198,6 +198,7 @@ export default function Dashboard() {
           shortUrl: createdUrl.shortUrl,
           startDate: createdUrl.startDate ?? null,
           expiresAt: createdUrl.expiresAt ?? null,
+          isPasswordProtected: createdUrl.isPasswordProtected,
           createdAt: new Date().toISOString(),
           totalClicks: 0,
         },

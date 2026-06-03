@@ -80,14 +80,23 @@ export default function UrlTable({
                     <span className="block text-xs uppercase tracking-[0.16em] text-slate-500">
                       Short URL
                     </span>
-                    <a
-                      href={url.shortUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-1 inline-block break-all text-cyan-300 transition-colors hover:text-cyan-200"
-                    >
-                      {url.shortUrl}
-                    </a>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <a
+                        href={url.shortUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-block break-all text-cyan-300 transition-colors hover:text-cyan-200"
+                      >
+                        {url.shortUrl}
+                      </a>
+                      {url.isPasswordProtected && (
+                        <span className="inline-flex items-center text-cyan-400" title="Password protected">
+                          <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+                          </svg>
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <span className="block text-xs uppercase tracking-[0.16em] text-slate-500">

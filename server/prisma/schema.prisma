@@ -32,6 +32,9 @@ model Url {
   startDate    DateTime?
   expiresAt    DateTime?
 
+  isPasswordProtected Boolean   @default(false)
+  passwordHash        String?
+
   createdAt    DateTime @default(now())
 }
 

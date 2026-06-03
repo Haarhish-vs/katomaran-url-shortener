@@ -3,6 +3,7 @@ import { encodeBuffer } from '../../utils/base62.js';
 import logger from '../../utils/logger.js';
 import { handleCustomAlias } from '../custom-alias/custom-alias.service.js';
 import { validateDates } from '../expiry/expiry.service.js';
+import { hashPassword } from '../../utils/hash.js';
 
 function validateUrlFormat(value) {
 	try {
@@ -13,7 +14,7 @@ function validateUrlFormat(value) {
 	}
 }
 
-export async function createUrlService({ originalUrl, userId, customAlias, startDate, expiresAt }) {
+export async function createUrlService({ originalUrl, userId, customAlias, startDate, expiresAt, password }) {
 	if (!validateUrlFormat(originalUrl)) {
 		logger.warn('[URL]', 'URL Creation Failed', { userId, reason: 'Invalid URL format' });
 		const err = new Error('Invalid URL format');
@@ -26,9 +27,21 @@ export async function createUrlService({ originalUrl, userId, customAlias, start
 	// ── Date Validation ───────────────────────────────────────────────────────
 	const { parsedStart, parsedExpiry } = validateDates({ startDate, expiresAt }, { userId });
 
+	// ── Password Validation ───────────────────────────────────────────────────
+	let hashedPassword = null;
+	if (password !== undefined && password !== null) {
+		if (typeof password !== 'string' || password.trim() === '') {
+			logger.warn('[PASSWORD_PROTECTION]', 'URL Creation Failed', { userId, reason: 'Password cannot be empty' });
+			const err = new Error('Password cannot be empty');
+			err.statusCode = 400;
+			throw err;
+		}
+		hashedPassword = await hashPassword(password);
+	}
+
 	// ── Custom Alias Flow ─────────────────────────────────────────────────────
 	if (customAlias) {
-		return handleCustomAlias({ originalUrl, userId, customAlias, startDate, expiresAt });
+		return handleCustomAlias({ originalUrl, userId, customAlias, startDate, expiresAt, password });
 	}
 
 	// ── Step 1: Create database record — DB generates the unique ID ───────────
@@ -38,8 +51,13 @@ export async function createUrlService({ originalUrl, userId, customAlias, start
 			userId,
 			...(parsedStart ? { startDate: parsedStart } : {}),
 			...(parsedExpiry ? { expiresAt: parsedExpiry } : {}),
+			...(hashedPassword ? { isPasswordProtected: true, passwordHash: hashedPassword } : {}),
 		},
 	});
+
+	if (hashedPassword) {
+		logger.info('[PASSWORD_PROTECTION]', 'Protected URL Created', { userId, urlId: created.id });
+	}
 
 	// ── Step 2: Derive shortCode by Base62-encoding the DB-generated ID ───────
 	let shortCode = encodeBuffer(Buffer.from(created.id)).slice(0, 8);
@@ -61,6 +79,7 @@ export async function createUrlService({ originalUrl, userId, customAlias, start
 				urlId: updated.id,
 				hasStartDate: Boolean(updated.startDate),
 				hasExpiresAt: Boolean(updated.expiresAt),
+				isPasswordProtected: updated.isPasswordProtected,
 			});
 
 			return {
@@ -68,12 +87,14 @@ export async function createUrlService({ originalUrl, userId, customAlias, start
 				originalUrl: updated.originalUrl,
 				shortCode: updated.shortCode,
 				shortUrl: `${base}/${updated.shortCode}`,
+				isPasswordProtected: updated.isPasswordProtected,
 				...(updated.startDate ? { startDate: updated.startDate } : {}),
 				...(updated.expiresAt ? { expiresAt: updated.expiresAt } : {}),
 			};
-		} catch {
+		} catch (error) {
+			logger.error('[URL]', 'Prisma update failed in loop', { error: error.message, stack: error.stack });
 			// Unique constraint collision — vary the input and retry
-			shortCode = encodeBuffer(Buffer.from(created.id + attempt)).slice(0, 8);
+			shortCode = encodeBuffer(Buffer.from(attempt + created.id)).slice(0, 8);
 			logger.warn('[URL]', 'Short Code Collision, Retrying', { userId, attempt: attempt + 1 });
 		}
 	}

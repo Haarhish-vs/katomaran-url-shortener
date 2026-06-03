@@ -3,7 +3,7 @@ import logger from '../../utils/logger.js';
 
 export async function createUrl(req, res, next) {
 	try {
-		const { originalUrl, customAlias, startDate, expiresAt } = req.body || {};
+		const { originalUrl, customAlias, startDate, expiresAt, password } = req.body || {};
 		const user = req.user;
 
 		logger.info('[URL]', 'Create URL Request', {
@@ -12,6 +12,7 @@ export async function createUrl(req, res, next) {
 			customAlias,
 			hasStartDate: Boolean(startDate),
 			hasExpiresAt: Boolean(expiresAt),
+			hasPassword: Boolean(password),
 			userId: user?.id,
 		});
 
@@ -33,6 +34,7 @@ export async function createUrl(req, res, next) {
 			customAlias,
 			startDate,
 			expiresAt,
+			password,
 		});
 
 		return res.status(201).json({ success: true, data: result });

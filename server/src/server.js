@@ -1,3 +1,4 @@
+// Force nodemon reload 2
 import express from 'express';
 import dotenv from 'dotenv';
 import prisma from './config/db.js';

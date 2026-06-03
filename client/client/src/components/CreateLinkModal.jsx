@@ -210,7 +210,20 @@ function DateField({ id, label, value, onChange, min }) {
 }
 
 // ─── Step 2: Advanced ────────────────────────────────────────────────────────
-function AdvancedStep({ alias, setAlias, startDate, setStartDate, expiresAt, setExpiresAt, onBack, onCreateLink }) {
+function AdvancedStep({
+  alias,
+  setAlias,
+  startDate,
+  setStartDate,
+  expiresAt,
+  setExpiresAt,
+  password,
+  setPassword,
+  isPasswordEnabled,
+  setIsPasswordEnabled,
+  onBack,
+  onCreateLink,
+}) {
   const inputRef = useRef(null)
   const trimmedAlias = alias.trim()
   const aliasResult = validateAlias(trimmedAlias)
@@ -220,7 +233,9 @@ function AdvancedStep({ alias, setAlias, startDate, setStartDate, expiresAt, set
       ? 'Expiry date must be after start date.'
       : null
 
-  const canCreate = aliasResult.valid && !dateError
+  const passwordError = isPasswordEnabled && !password.trim() ? 'Password is required when protection is enabled.' : null
+
+  const canCreate = aliasResult.valid && !dateError && !passwordError
 
   useEffect(() => { inputRef.current?.focus() }, [])
 
@@ -311,24 +326,65 @@ function AdvancedStep({ alias, setAlias, startDate, setStartDate, expiresAt, set
         )}
       </div>
 
-      {/* Password Protection — Coming Soon */}
-      <div className="mt-4 rounded-2xl border border-white/10 bg-slate-950/40 p-4 opacity-50 cursor-not-allowed select-none">
+      {/* Password Protection */}
+      <div className="mt-4 rounded-2xl border border-white/10 bg-slate-950/60 p-5 font-sans">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-white/5">
-              <svg className="h-4 w-4 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
+              <svg className={`h-4 w-4 transition-colors ${isPasswordEnabled ? 'text-cyan-400' : 'text-slate-500'}`} viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
               </svg>
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-400">Password Protection</p>
-              <p className="text-xs text-slate-600">Require a password to access</p>
+              <p className="text-sm font-semibold text-white">Password Protection</p>
+              <p className="text-xs text-slate-500 mt-0.5">Require a password to access this link</p>
             </div>
           </div>
-          <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-            Coming Soon
-          </span>
+          <button
+            id="create-link-password-toggle"
+            type="button"
+            onClick={() => {
+              setIsPasswordEnabled(!isPasswordEnabled)
+              if (isPasswordEnabled) setPassword('')
+            }}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+              isPasswordEnabled ? 'bg-cyan-400' : 'bg-slate-800'
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-slate-950 shadow ring-0 transition duration-200 ease-in-out ${
+                isPasswordEnabled ? 'translate-x-5' : 'translate-x-0'
+              }`}
+            />
+          </button>
         </div>
+
+        {isPasswordEnabled && (
+          <div className="relative mt-4">
+            <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+              <svg className="h-4 w-4 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <input
+              id="create-link-password"
+              type="password"
+              placeholder="Enter link password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-xl border border-white/10 bg-slate-950 pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition-all duration-200 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20"
+            />
+          </div>
+        )}
+
+        {passwordError && (
+          <div className="mt-3 flex items-center gap-1.5 rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2">
+            <svg className="h-3.5 w-3.5 text-rose-400 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+            </svg>
+            <span className="text-xs text-rose-400">{passwordError}</span>
+          </div>
+        )}
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
@@ -402,9 +458,20 @@ function SuccessStep({ result, onClose }) {
         <p className="text-sm font-mono font-semibold text-cyan-300 break-all">{result.shortUrl}</p>
       </div>
 
-      {/* Date metadata — only when set */}
-      {(startDateFormatted || expiresAtFormatted) && (
+      {/* Date and Protection metadata */}
+      {(startDateFormatted || expiresAtFormatted || result.isPasswordProtected) && (
         <div className="mt-3 w-full rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3 text-left space-y-2">
+          {result.isPasswordProtected && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-slate-500">Security</span>
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-400">
+                <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+                </svg>
+                Password Protected
+              </span>
+            </div>
+          )}
           {startDateFormatted && (
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-500">Active from</span>
@@ -503,6 +570,8 @@ export default function CreateLinkModal({ isOpen, onClose, onCreated }) {
   const [alias, setAlias] = useState('')
   const [startDate, setStartDate] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
+  const [password, setPassword] = useState('')
+  const [isPasswordEnabled, setIsPasswordEnabled] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
   const backdropRef = useRef(null)
@@ -511,6 +580,7 @@ export default function CreateLinkModal({ isOpen, onClose, onCreated }) {
     if (isOpen) {
       setStep(0); setUrl(''); setAlias('')
       setStartDate(''); setExpiresAt('')
+      setPassword(''); setIsPasswordEnabled(false)
       setResult(null); setError('')
     }
   }, [isOpen])
@@ -544,11 +614,24 @@ export default function CreateLinkModal({ isOpen, onClose, onCreated }) {
       const payload = { originalUrl: url.trim() }
       const trimmedAlias = alias.trim()
       if (trimmedAlias) payload.customAlias = trimmedAlias
-      if (startDate) payload.startDate = new Date(startDate).toISOString()
+      if (startDate) {
+        const [year, month, day] = startDate.split('-').map(Number)
+        const start = new Date(year, month - 1, day)
+        const today = new Date()
+        if (start.toDateString() === today.toDateString()) {
+          payload.startDate = today.toISOString()
+        } else {
+          payload.startDate = start.toISOString()
+        }
+      }
       if (expiresAt) {
-        const exp = new Date(expiresAt)
+        const [year, month, day] = expiresAt.split('-').map(Number)
+        const exp = new Date(year, month - 1, day)
         exp.setHours(23, 59, 59, 999)
         payload.expiresAt = exp.toISOString()
+      }
+      if (isPasswordEnabled && password) {
+        payload.password = password
       }
       const created = await createShortUrl(payload)
       setResult(created)
@@ -615,6 +698,8 @@ export default function CreateLinkModal({ isOpen, onClose, onCreated }) {
               alias={alias} setAlias={setAlias}
               startDate={startDate} setStartDate={setStartDate}
               expiresAt={expiresAt} setExpiresAt={setExpiresAt}
+              password={password} setPassword={setPassword}
+              isPasswordEnabled={isPasswordEnabled} setIsPasswordEnabled={setIsPasswordEnabled}
               onBack={() => setStep(0)}
               onCreateLink={handleCreateLink}
             />

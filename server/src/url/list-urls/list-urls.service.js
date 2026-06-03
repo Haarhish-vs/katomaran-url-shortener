@@ -10,6 +10,7 @@ export async function getUserUrlsService(userId) {
 			shortCode: true,
 			startDate: true,
 			expiresAt: true,
+			isPasswordProtected: true,
 			createdAt: true,
 			_count: {
 				select: {
@@ -33,6 +34,7 @@ export async function getUserUrlsService(userId) {
 			shortUrl: `${baseUrl}/${url.shortCode}`,
 			startDate: url.startDate ?? null,
 			expiresAt: url.expiresAt ?? null,
+			isPasswordProtected: url.isPasswordProtected,
 			createdAt: url.createdAt,
 			totalClicks: url._count.visits,
 		})),

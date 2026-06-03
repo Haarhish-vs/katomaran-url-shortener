@@ -24,6 +24,7 @@ export async function redirectUrlService(shortCode) {
 			shortCode: true,
 			startDate: true,
 			expiresAt: true,
+			isPasswordProtected: true,
 		},
 	});
 
@@ -60,6 +61,15 @@ export async function redirectUrlService(shortCode) {
 		const err = new Error('Link has expired');
 		err.statusCode = 410;
 		throw err;
+	}
+
+	// ── Password Protection Check ──────────────────────────────────────────────
+	if (url.isPasswordProtected) {
+		logger.info('[PASSWORD_PROTECTION]', 'Redirect Gated — Password Required', { shortCode, urlId: url.id });
+		return {
+			passwordRequired: true,
+			shortCode: url.shortCode,
+		};
 	}
 
 	await recordVisit(url.id);
