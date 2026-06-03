@@ -1,5 +1,6 @@
 import prisma from '../config/db.js';
 import { generateRandomBase62 } from '../utils/base62.js';
+import { recordVisit } from '../analytics/analytics.service.js';
 
 function validateUrlFormat(value) {
 	try {
@@ -59,4 +60,38 @@ export async function createUrlService({ originalUrl, userId }) {
 	const err = new Error('Failed to generate short code');
 	err.statusCode = 500;
 	throw err;
+}
+
+function validateShortCode(shortCode) {
+	return typeof shortCode === 'string' && /^[A-Za-z0-9]+$/.test(shortCode);
+}
+
+export async function redirectUrlService(shortCode) {
+	if (!validateShortCode(shortCode)) {
+		const err = new Error('Short code not found');
+		err.statusCode = 404;
+		throw err;
+	}
+
+	const url = await prisma.url.findUnique({
+		where: { shortCode },
+		select: {
+			id: true,
+			originalUrl: true,
+			shortCode: true
+		}
+	});
+
+	if (!url) {
+		const err = new Error('Short code not found');
+		err.statusCode = 404;
+		throw err;
+	}
+
+	await recordVisit(url.id);
+
+	return {
+		originalUrl: url.originalUrl,
+		shortCode: url.shortCode
+	};
 }

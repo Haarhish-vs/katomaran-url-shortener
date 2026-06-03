@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import prisma from './config/db.js';
 import authRoutes from './auth/auth.routes.js';
 import urlRoutes from './url/url.routes.js';
+import { redirectUrl } from './url/url.controller.js';
 
 dotenv.config();
 
@@ -12,6 +13,8 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/urls', urlRoutes);
+
+app.get('/:shortCode', redirectUrl);
 
 app.get('/', async (req, res) => {
   try {
