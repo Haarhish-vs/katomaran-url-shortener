@@ -31,7 +31,7 @@ export default function UrlForm({ isAuthenticated, isSubmitting, onSubmit, onAut
     setValidationError('')
 
     if (!isAuthenticated) {
-      onAuthRequired('Create an account to start shortening URLs.')
+      onAuthRequired('Please sign in to continue')
       return
     }
 

@@ -25,14 +25,14 @@ export default function UrlTable({
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
           <button
             type="button"
-            onClick={() => onAuthRequired('Create an account to start shortening URLs.')}
+            onClick={() => onAuthRequired('Please sign in to continue')}
             className="rounded-full bg-cyan-400 px-4 py-2 font-semibold text-slate-950"
           >
             Signup to manage links
           </button>
           <button
             type="button"
-            onClick={() => onAuthRequired('Please sign in to continue.')}
+            onClick={() => onAuthRequired('Please sign in to continue')}
             className="rounded-full border border-white/10 px-4 py-2 font-semibold text-white"
           >
             Login to continue
@@ -121,11 +121,11 @@ export default function UrlTable({
                   </button>
                   <button
                     type="button"
-                    onClick={() => onDelete(url.shortCode)}
-                    disabled={activeActionId === url.shortCode}
+                    onClick={() => onDelete(url)}
+                    disabled={activeActionId === url.id}
                     className="rounded-full border border-rose-400/30 px-3 py-2 text-sm font-medium text-rose-200 transition-colors hover:bg-rose-400/10 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {activeActionId === url.shortCode ? 'Deleting...' : 'Delete'}
+                    {activeActionId === url.id ? 'Deleting...' : 'Delete'}
                   </button>
                 </div>
               </div>

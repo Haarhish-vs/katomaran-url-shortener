@@ -10,7 +10,7 @@ export async function createShortUrl(payload) {
   return response.data.data
 }
 
-export async function deleteShortUrl(shortCode) {
-  const response = await apiClient.delete(`/urls/${shortCode}`)
+export async function deleteShortUrl(id) {
+  const response = await apiClient.delete(`/urls/${id}`)
   return response.data.data
 }

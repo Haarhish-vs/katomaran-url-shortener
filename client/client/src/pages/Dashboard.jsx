@@ -71,6 +71,7 @@ export default function Dashboard() {
   const [isLoadingUrls, setIsLoadingUrls] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [activeActionId, setActiveActionId] = useState(null)
+  const [pendingDeleteUrl, setPendingDeleteUrl] = useState(null)
   const [toast, setToast] = useState(null)
   const visibleUrls = isAuthenticated ? urls : []
   const totalClicks = visibleUrls.reduce((sum, url) => sum + (url.totalClicks || 0), 0)
@@ -160,7 +161,7 @@ export default function Dashboard() {
     return () => window.clearTimeout(timeoutId)
   }, [toast])
 
-  const openAuthToast = (message) => {
+  const openAuthToast = (message = 'Please sign in to continue') => {
     setToast({
       title: 'Authentication required',
       message,
@@ -179,7 +180,7 @@ export default function Dashboard() {
 
   const handleCreateUrl = async (originalUrl) => {
     if (!isAuthenticated) {
-      openAuthToast('Create an account to start shortening URLs.')
+      openAuthToast('Please sign in to continue')
       return
     }
 
@@ -213,17 +214,24 @@ export default function Dashboard() {
     }
   }
 
-  const handleDelete = async (shortCode) => {
+  const handleDelete = (url) => {
     if (!isAuthenticated) {
-      openAuthToast('Please sign in to continue.')
+      openAuthToast('Please sign in to continue')
       return
     }
 
-    setActiveActionId(shortCode)
+    setPendingDeleteUrl(url)
+  }
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteUrl) return
+
+    setActiveActionId(pendingDeleteUrl.id)
 
     try {
-      await deleteShortUrl(shortCode)
-      setUrls((currentUrls) => currentUrls.filter((url) => url.shortCode !== shortCode))
+      await deleteShortUrl(pendingDeleteUrl.id)
+      const response = await getUserUrls()
+      setUrls(response.urls || [])
       showSuccessToast('URL deleted successfully.')
     } catch (error) {
       setToast({
@@ -233,12 +241,18 @@ export default function Dashboard() {
       })
     } finally {
       setActiveActionId(null)
+      setPendingDeleteUrl(null)
     }
+  }
+
+  const cancelDelete = () => {
+    if (activeActionId) return
+    setPendingDeleteUrl(null)
   }
 
   const handleOpenAnalytics = (shortCode) => {
     if (!isAuthenticated) {
-      openAuthToast('Please sign in to continue.')
+      openAuthToast('Please sign in to continue')
       return
     }
 
@@ -250,6 +264,37 @@ export default function Dashboard() {
       <Navbar />
 
       <Toast toast={toast} onClose={() => setToast(null)} />
+
+      {pendingDeleteUrl ? (
+        <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900/95 p-6 shadow-2xl shadow-slate-950/50">
+            <h3 className="text-lg font-semibold text-white">Delete URL</h3>
+            <p className="mt-2 text-sm text-slate-300">
+              Are you sure you want to delete this short URL?
+            </p>
+            <p className="mt-2 break-all text-sm text-cyan-300">{pendingDeleteUrl.shortUrl}</p>
+
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={cancelDelete}
+                disabled={Boolean(activeActionId)}
+                className="rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                disabled={Boolean(activeActionId)}
+                className="rounded-full border border-rose-400/30 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-200 transition-colors hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {activeActionId ? 'Deleting...' : 'Delete URL'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         <UrlForm isAuthenticated={isAuthenticated} isSubmitting={isSubmitting} onSubmit={handleCreateUrl} onAuthRequired={openAuthToast} />

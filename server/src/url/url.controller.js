@@ -64,14 +64,14 @@ export async function getUserUrls(req, res, next) {
 
 export async function deleteUrl(req, res, next) {
 	try {
-		const { shortCode } = req.params || {};
+		const { id } = req.params || {};
 		const user = req.user;
 
 		if (!user || !user.id) {
 			return res.status(401).json({ success: false, message: 'Unauthorized' });
 		}
 
-		const result = await deleteUrlService({ shortCode, userId: user.id });
+		const result = await deleteUrlService({ id, userId: user.id });
 
 		return res.status(200).json({ success: true, message: 'URL deleted successfully', data: result });
 	} catch (err) {
