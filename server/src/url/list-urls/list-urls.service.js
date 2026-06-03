@@ -8,16 +8,18 @@ export async function getUserUrlsService(userId) {
 			id: true,
 			originalUrl: true,
 			shortCode: true,
+			startDate: true,
+			expiresAt: true,
 			createdAt: true,
 			_count: {
 				select: {
-					visits: true
-				}
-			}
+					visits: true,
+				},
+			},
 		},
 		orderBy: {
-			createdAt: 'desc'
-		}
+			createdAt: 'desc',
+		},
 	});
 
 	const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
@@ -29,8 +31,10 @@ export async function getUserUrlsService(userId) {
 			originalUrl: url.originalUrl,
 			shortCode: url.shortCode,
 			shortUrl: `${baseUrl}/${url.shortCode}`,
+			startDate: url.startDate ?? null,
+			expiresAt: url.expiresAt ?? null,
 			createdAt: url.createdAt,
-			totalClicks: url._count.visits
-		}))
+			totalClicks: url._count.visits,
+		})),
 	};
 }

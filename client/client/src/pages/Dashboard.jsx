@@ -1,10 +1,10 @@
 import { useContext, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
-import UrlForm from '../components/UrlForm'
 import UrlTable from '../components/UrlTable'
+import CreateLinkModal from '../components/CreateLinkModal'
 import { AuthContext } from '../context/AuthContext'
-import { createShortUrl, deleteShortUrl, getUserUrls } from '../services/url.api'
+import { deleteShortUrl, getUserUrls } from '../services/url.api'
 
 function formatDateTime(value) {
   if (!value) return '—'
@@ -25,7 +25,7 @@ function Toast({ toast, onClose }) {
   const toneClasses =
     toast.variant === 'error'
       ? 'border-rose-400/30 bg-rose-500/10 text-rose-100'
-      : 'border-cyan-400/30 bg-cyan-500/10 text-cyan-50'
+      : 'border-[#D4A843]/30 bg-[#D4A843]/10 text-amber-50'
 
   return (
     <div className="fixed right-4 top-4 z-50 w-[min(92vw,24rem)] rounded-2xl border p-4 shadow-2xl shadow-slate-950/50 backdrop-blur-xl sm:right-6 sm:top-6">
@@ -69,10 +69,11 @@ export default function Dashboard() {
   const { isAuthenticated } = useContext(AuthContext)
   const [urls, setUrls] = useState([])
   const [isLoadingUrls, setIsLoadingUrls] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [activeActionId, setActiveActionId] = useState(null)
   const [pendingDeleteUrl, setPendingDeleteUrl] = useState(null)
   const [toast, setToast] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
   const visibleUrls = isAuthenticated ? urls : []
   const totalClicks = visibleUrls.reduce((sum, url) => sum + (url.totalClicks || 0), 0)
   const latestUrl = visibleUrls[0] || null
@@ -178,27 +179,33 @@ export default function Dashboard() {
     })
   }
 
-  const handleCreateUrl = async (payload) => {
+  const handleOpenModal = () => {
     if (!isAuthenticated) {
-      openAuthToast('Please sign in to continue')
+      openAuthToast('Please sign in to create a Smart Link')
       return
     }
+    setIsModalOpen(true)
+  }
 
-    setIsSubmitting(true)
-
-    try {
-      const createdUrl = await createShortUrl(payload)
-      setUrls((currentUrls) => [createdUrl, ...currentUrls])
-      showSuccessToast('Short URL created successfully.')
-    } catch (error) {
-      setToast({
-        title: 'Unable to shorten URL',
-        message: getApiMessage(error, 'Please check the URL and try again.'),
-        variant: 'error',
-      })
-    } finally {
-      setIsSubmitting(false)
+  // Called when the modal closes after a successful creation
+  const handleModalCreated = (createdUrl) => {
+    if (createdUrl) {
+      setUrls((prev) => [
+        {
+          id: createdUrl.id,
+          originalUrl: createdUrl.originalUrl,
+          shortCode: createdUrl.shortCode,
+          shortUrl: createdUrl.shortUrl,
+          startDate: createdUrl.startDate ?? null,
+          expiresAt: createdUrl.expiresAt ?? null,
+          createdAt: new Date().toISOString(),
+          totalClicks: 0,
+        },
+        ...prev,
+      ])
+      showSuccessToast('Smart Link created successfully.')
     }
+    setIsModalOpen(false)
   }
 
   const handleCopy = async (shortUrl) => {
@@ -265,6 +272,14 @@ export default function Dashboard() {
 
       <Toast toast={toast} onClose={() => setToast(null)} />
 
+      {/* Create Smart Link Modal */}
+      <CreateLinkModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onCreated={handleModalCreated}
+      />
+
+      {/* Delete confirmation dialog */}
       {pendingDeleteUrl ? (
         <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900/95 p-6 shadow-2xl shadow-slate-950/50">
@@ -307,8 +322,43 @@ export default function Dashboard() {
       ) : null}
 
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <UrlForm isAuthenticated={isAuthenticated} isSubmitting={isSubmitting} onSubmit={handleCreateUrl} onAuthRequired={openAuthToast} />
 
+        {/* ── Hero Create Button ────────────────────────────────────────────── */}
+        <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60 p-6 sm:p-8">
+          {/* Subtle ambient glow — matches slate palette */}
+          <div className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-cyan-500/5 blur-3xl" />
+
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-1.5 mb-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+                  Smart Link Studio
+                </span>
+              </div>
+              <h1 className="text-2xl font-bold text-white sm:text-3xl tracking-tight">
+                Create Smart Links
+              </h1>
+              <p className="mt-1.5 text-sm text-slate-400">
+                Shorten, schedule, and track your links in seconds.
+              </p>
+            </div>
+
+            <button
+              id="open-create-modal-btn"
+              type="button"
+              onClick={handleOpenModal}
+              className="inline-flex shrink-0 items-center gap-2.5 rounded-2xl bg-cyan-400 px-6 py-3.5 text-sm font-bold text-slate-950 transition-all hover:bg-cyan-300 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-cyan-400/10"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+              </svg>
+              Create Smart Link
+            </button>
+          </div>
+        </section>
+
+        {/* ── Summary Cards ─────────────────────────────────────────────────── */}
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {summaryCards.map((card) => (
             <article key={`${card.label}-stat`} className="rounded-3xl border border-white/10 bg-slate-900/60 p-5">
@@ -319,6 +369,7 @@ export default function Dashboard() {
           ))}
         </section>
 
+        {/* ── URL Table ─────────────────────────────────────────────────────── */}
         {isLoadingUrls ? (
           <section className="rounded-3xl border border-white/10 bg-slate-900/60 p-6 text-sm text-slate-300">
             Loading your URLs...
@@ -335,6 +386,7 @@ export default function Dashboard() {
           />
         )}
 
+        {/* ── Analytics Preview ─────────────────────────────────────────────── */}
         <section className="rounded-3xl border border-white/10 bg-slate-900/60 p-5 sm:p-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>

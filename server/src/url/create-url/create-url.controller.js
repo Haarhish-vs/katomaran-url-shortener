@@ -3,9 +3,17 @@ import logger from '../../utils/logger.js';
 
 export async function createUrl(req, res, next) {
 	try {
-		const { originalUrl, customAlias } = req.body || {};
+		const { originalUrl, customAlias, startDate, expiresAt } = req.body || {};
 		const user = req.user;
-		logger.info('[URL]', 'Create URL Request', { method: req.method, route: req.originalUrl, customAlias, userId: user?.id });
+
+		logger.info('[URL]', 'Create URL Request', {
+			method: req.method,
+			route: req.originalUrl,
+			customAlias,
+			hasStartDate: Boolean(startDate),
+			hasExpiresAt: Boolean(expiresAt),
+			userId: user?.id,
+		});
 
 		if (!user || !user.id) {
 			const err = new Error('Unauthorized');
@@ -19,7 +27,13 @@ export async function createUrl(req, res, next) {
 			return next(err);
 		}
 
-		const result = await createUrlService({ originalUrl, userId: user.id, customAlias });
+		const result = await createUrlService({
+			originalUrl,
+			userId: user.id,
+			customAlias,
+			startDate,
+			expiresAt,
+		});
 
 		return res.status(201).json({ success: true, data: result });
 	} catch (err) {

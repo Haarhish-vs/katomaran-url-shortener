@@ -13,7 +13,7 @@ export function validateCustomAlias(alias) {
 	return true;
 }
 
-export async function handleCustomAlias({ originalUrl, userId, customAlias }) {
+export async function handleCustomAlias({ originalUrl, userId, customAlias, startDate, expiresAt }) {
 	const trimmedAlias = customAlias.trim();
 	if (!validateCustomAlias(trimmedAlias)) {
 		logger.warn('[URL]', 'URL Creation Failed', { userId, reason: 'Invalid custom alias format', customAlias });
@@ -37,7 +37,9 @@ export async function handleCustomAlias({ originalUrl, userId, customAlias }) {
 		data: {
 			originalUrl,
 			userId,
-			shortCode: trimmedAlias
+			shortCode: trimmedAlias,
+			...(startDate ? { startDate: new Date(startDate) } : {}),
+			...(expiresAt ? { expiresAt: new Date(expiresAt) } : {})
 		}
 	});
 
@@ -47,6 +49,8 @@ export async function handleCustomAlias({ originalUrl, userId, customAlias }) {
 		id: created.id,
 		originalUrl: created.originalUrl,
 		shortCode: created.shortCode,
-		shortUrl: `${base}/${created.shortCode}`
+		shortUrl: `${base}/${created.shortCode}`,
+		...(created.startDate ? { startDate: created.startDate } : {}),
+		...(created.expiresAt ? { expiresAt: created.expiresAt } : {})
 	};
 }

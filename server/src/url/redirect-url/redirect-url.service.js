@@ -3,7 +3,7 @@ import logger from '../../utils/logger.js';
 import { recordVisit } from '../../analytics/overview/overview.service.js';
 
 function validateShortCode(shortCode) {
-	return typeof shortCode === 'string' && /^[A-Za-z0-9]+$/.test(shortCode);
+	return typeof shortCode === 'string' && /^[A-Za-z0-9\-_]+$/.test(shortCode);
 }
 
 export async function redirectUrlService(shortCode) {
@@ -21,8 +21,10 @@ export async function redirectUrlService(shortCode) {
 		select: {
 			id: true,
 			originalUrl: true,
-			shortCode: true
-		}
+			shortCode: true,
+			startDate: true,
+			expiresAt: true,
+		},
 	});
 
 	if (!url) {
@@ -32,11 +34,39 @@ export async function redirectUrlService(shortCode) {
 		throw err;
 	}
 
+	const now = new Date();
+
+	// ── Case 2 / Case 3: Check Start Date ────────────────────────────────────
+	if (url.startDate && now < url.startDate) {
+		logger.warn('[URL]', 'Redirect Blocked — Not Yet Active', {
+			shortCode,
+			urlId: url.id,
+			startDate: url.startDate,
+			now,
+		});
+		const err = new Error('Link is not yet active');
+		err.statusCode = 404;
+		throw err;
+	}
+
+	// ── Case 4: Check Expiry Date ─────────────────────────────────────────────
+	if (url.expiresAt && now >= url.expiresAt) {
+		logger.warn('[URL]', 'Redirect Blocked — Link Expired', {
+			shortCode,
+			urlId: url.id,
+			expiresAt: url.expiresAt,
+			now,
+		});
+		const err = new Error('Link has expired');
+		err.statusCode = 410;
+		throw err;
+	}
+
 	await recordVisit(url.id);
 	logger.success('[URL]', 'Redirect Success', { shortCode, urlId: url.id });
 
 	return {
 		originalUrl: url.originalUrl,
-		shortCode: url.shortCode
+		shortCode: url.shortCode,
 	};
 }

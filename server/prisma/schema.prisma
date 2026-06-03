@@ -29,6 +29,9 @@ model Url {
 
   visits       Visit[]
 
+  startDate    DateTime?
+  expiresAt    DateTime?
+
   createdAt    DateTime @default(now())
 }
 
