@@ -76,9 +76,9 @@ export async function getUserUrls(req, res, next) {
 
 export async function deleteUrl(req, res, next) {
 	try {
-		const { shortCode } = req.params || {};
+		const { id } = req.params || {};
 		const user = req.user;
-		logger.info('[URL]', 'Delete URL Request', { method: req.method, route: req.originalUrl, shortCode, userId: user?.id });
+		logger.info('[URL]', 'Delete URL Request', { method: req.method, route: req.originalUrl, id, userId: user?.id });
 
 		if (!user || !user.id) {
 			const err = new Error('Unauthorized');
@@ -86,7 +86,7 @@ export async function deleteUrl(req, res, next) {
 			return next(err);
 		}
 
-		const result = await deleteUrlService({ shortCode, userId: user.id });
+		const result = await deleteUrlService({ id, userId: user.id });
 
 		return res.status(200).json({ success: true, message: 'URL deleted successfully', data: result });
 	} catch (err) {

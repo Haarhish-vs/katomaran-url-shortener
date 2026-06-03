@@ -136,31 +136,32 @@ export async function getUserUrlsService(userId) {
 	};
 }
 
-export async function deleteUrlService({ shortCode, userId }) {
-	if (!shortCode || typeof shortCode !== 'string') {
-		logger.warn('[URL]', 'URL Deleted', { userId, shortCode, reason: 'Short code not found' });
-		const err = new Error('Short code not found');
+export async function deleteUrlService({ id, userId }) {
+	if (!id || typeof id !== 'string') {
+		logger.warn('[URL]', 'URL Deleted', { userId, id, reason: 'URL ID not found' });
+		const err = new Error('URL not found');
 		err.statusCode = 404;
 		throw err;
 	}
 
 	const url = await prisma.url.findUnique({
-		where: { shortCode },
+		where: { id },
 		select: {
 			id: true,
-			userId: true
+			userId: true,
+			shortCode: true
 		}
 	});
 
 	if (!url) {
-		logger.warn('[URL]', 'URL Deleted', { userId, shortCode, reason: 'URL not found' });
-		const err = new Error('Short code not found');
+		logger.warn('[URL]', 'URL Deleted', { userId, id, reason: 'URL not found' });
+		const err = new Error('URL not found');
 		err.statusCode = 404;
 		throw err;
 	}
 
 	if (url.userId !== userId) {
-		logger.warn('[URL]', 'URL Deleted', { userId, shortCode, reason: 'Forbidden' });
+		logger.warn('[URL]', 'URL Deleted', { userId, id, reason: 'Forbidden' });
 		const err = new Error('Forbidden');
 		err.statusCode = 403;
 		throw err;
@@ -175,9 +176,10 @@ export async function deleteUrlService({ shortCode, userId }) {
 		})
 	]);
 
-	logger.success('[URL]', 'URL Deleted', { userId, shortCode, urlId: url.id });
+	logger.success('[URL]', 'URL Deleted', { userId, id, shortCode: url.shortCode });
 
 	return {
-		shortCode
+		id,
+		shortCode: url.shortCode
 	};
 }

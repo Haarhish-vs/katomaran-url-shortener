@@ -11,6 +11,6 @@ router.post('/', authMiddleware, createUrl);
 router.get('/', authMiddleware, getUserUrls);
 
 // Delete a URL owned by the logged-in user (protected)
-router.delete('/:shortCode', authMiddleware, deleteUrl);
+router.delete('/:id', authMiddleware, deleteUrl);
 
 export default router;
