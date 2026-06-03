@@ -18,33 +18,35 @@ export async function createUrlService({ originalUrl, userId }) {
 		throw err;
 	}
 
-	const base = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
+	// Create initial record without shortCode
+	const created = await prisma.url.create({
+		data: {
+			originalUrl,
+			userId
+		}
+	});
+
+	// Generate unique shortCode and update the record
+	let shortCode;
 	const maxAttempts = 5;
 	let attempt = 0;
 	while (attempt < maxAttempts) {
-		const shortCode = generateRandomBase62(8);
+		shortCode = generateRandomBase62(8);
 		try {
-			const created = await prisma.url.create({
-				data: {
-					originalUrl,
-					userId,
-					shortCode
-				}
+			const updated = await prisma.url.update({
+				where: { id: created.id },
+				data: { shortCode }
 			});
-
+			// Success
+			const base = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
 			return {
-				id: created.id,
-				originalUrl: created.originalUrl,
-				shortCode: created.shortCode,
-				shortUrl: `${base}/${created.shortCode}`,
-				createdAt: created.createdAt,
-				totalClicks: 0
+				id: updated.id,
+				originalUrl: updated.originalUrl,
+				shortCode: updated.shortCode,
+				shortUrl: `${base}/${updated.shortCode}`
 			};
 		} catch (e) {
-			if (e?.code !== 'P2002') {
-				throw e;
-			}
-
+			// If shortCode unique constraint failed, retry
 			attempt += 1;
 			if (attempt >= maxAttempts) {
 				const err = new Error('Failed to generate unique short code');
@@ -127,24 +129,23 @@ export async function getUserUrlsService(userId) {
 	};
 }
 
-export async function deleteUrlService({ id, userId }) {
-	if (!id || typeof id !== 'string') {
-		const err = new Error('URL not found');
+export async function deleteUrlService({ shortCode, userId }) {
+	if (!shortCode || typeof shortCode !== 'string') {
+		const err = new Error('Short code not found');
 		err.statusCode = 404;
 		throw err;
 	}
 
 	const url = await prisma.url.findUnique({
-		where: { id },
+		where: { shortCode },
 		select: {
 			id: true,
-			userId: true,
-			shortCode: true
+			userId: true
 		}
 	});
 
 	if (!url) {
-		const err = new Error('URL not found');
+		const err = new Error('Short code not found');
 		err.statusCode = 404;
 		throw err;
 	}
@@ -165,7 +166,6 @@ export async function deleteUrlService({ id, userId }) {
 	]);
 
 	return {
-		id: url.id,
-		shortCode: url.shortCode
+		shortCode
 	};
 }
