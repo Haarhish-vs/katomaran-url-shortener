@@ -73,51 +73,7 @@ export default function Dashboard() {
   const [activeActionId, setActiveActionId] = useState(null)
   const [toast, setToast] = useState(null)
   const visibleUrls = isAuthenticated ? urls : []
-
-  useEffect(() => {
-    if (!isAuthenticated) return undefined
-
-    let isMounted = true
-
-    async function loadUrls() {
-      setIsLoadingUrls(true)
-
-      try {
-        const response = await getUserUrls()
-        if (isMounted) {
-          setUrls(response.urls || [])
-        }
-      } catch (error) {
-        if (isMounted) {
-          setToast({
-            title: 'Unable to load URLs',
-            message: getApiMessage(error, 'Please try again in a moment.'),
-            variant: 'error',
-          })
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoadingUrls(false)
-        }
-      }
-    }
-
-    loadUrls()
-
-    return () => {
-      isMounted = false
-    }
-  }, [isAuthenticated])
-
-  useEffect(() => {
-    if (!toast) return undefined
-
-    const timeoutId = window.setTimeout(() => setToast(null), 5000)
-    return () => window.clearTimeout(timeoutId)
-  }, [toast])
-
   const totalClicks = visibleUrls.reduce((sum, url) => sum + (url.totalClicks || 0), 0)
-
   const latestUrl = visibleUrls[0] || null
   const mostClickedUrl =
     [...visibleUrls].sort((left, right) => (right.totalClicks || 0) - (left.totalClicks || 0))[0] || null
@@ -161,6 +117,48 @@ export default function Dashboard() {
       hint: 'Latest URL creation time',
     },
   ]
+
+  useEffect(() => {
+    if (!isAuthenticated) return undefined
+
+    let isMounted = true
+
+    async function loadUrls() {
+      setIsLoadingUrls(true)
+
+      try {
+        const response = await getUserUrls()
+        if (isMounted) {
+          setUrls(response.urls || [])
+        }
+      } catch (error) {
+        if (isMounted) {
+          setToast({
+            title: 'Unable to load URLs',
+            message: getApiMessage(error, 'Please try again in a moment.'),
+            variant: 'error',
+          })
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingUrls(false)
+        }
+      }
+    }
+
+    loadUrls()
+
+    return () => {
+      isMounted = false
+    }
+  }, [isAuthenticated])
+
+  useEffect(() => {
+    if (!toast) return undefined
+
+    const timeoutId = window.setTimeout(() => setToast(null), 5000)
+    return () => window.clearTimeout(timeoutId)
+  }, [toast])
 
   const openAuthToast = (message) => {
     setToast({
@@ -254,49 +252,6 @@ export default function Dashboard() {
       <Toast toast={toast} onClose={() => setToast(null)} />
 
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <section className="grid gap-6 rounded-3xl border border-white/10 bg-slate-900/60 p-6 shadow-2xl shadow-slate-950/30 lg:grid-cols-[1.25fr_0.75fr] lg:p-8">
-          <div className="space-y-5">
-            <div className="inline-flex items-center rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">
-              Dashboard
-            </div>
-
-            <div className="space-y-3">
-              <h1 className="max-w-2xl text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
-                Shorten, manage, and measure links from one clean workspace.
-              </h1>
-              <p className="max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
-                Generate short URLs, track click activity, and review analytics without leaving the dashboard.
-                Guests can explore the interface, while protected actions remain locked until sign-in.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <Link
-                to="/signup"
-                className="rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-300"
-              >
-                Create account
-              </Link>
-              <Link
-                to="/login"
-                className="rounded-full border border-white/10 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/5"
-              >
-                Sign in
-              </Link>
-            </div>
-          </div>
-
-          <div className="grid gap-4 rounded-3xl border border-white/10 bg-white/5 p-5 sm:grid-cols-2 lg:grid-cols-1">
-            {summaryCards.map((card) => (
-              <article key={card.label} className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-                <p className="text-sm font-medium text-slate-400">{card.label}</p>
-                <p className="mt-2 text-3xl font-semibold text-white">{card.value}</p>
-                <p className="mt-2 text-sm text-slate-500">{card.hint}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
         <UrlForm isAuthenticated={isAuthenticated} isSubmitting={isSubmitting} onSubmit={handleCreateUrl} onAuthRequired={openAuthToast} />
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

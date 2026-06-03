@@ -1,6 +1,16 @@
-import { Link } from 'react-router-dom'
+import { useContext } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { AuthContext } from '../context/AuthContext'
 
 export default function Navbar() {
+  const navigate = useNavigate()
+  const { isAuthenticated, signOut } = useContext(AuthContext)
+
+  const handleLogout = () => {
+    signOut()
+    navigate('/', { replace: true })
+  }
+
   return (
     <header className="border-b border-white/10 bg-slate-950/70 backdrop-blur">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
@@ -16,20 +26,34 @@ export default function Navbar() {
           </div>
         </Link>
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          <Link
-            to="/login"
-            className="rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:border-cyan-400/40 hover:bg-white/5"
+        {isAuthenticated ? (
+          <button
+            type="button"
+            onClick={handleLogout}
+            aria-label="Logout"
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-slate-200 transition-colors hover:border-cyan-400/40 hover:bg-white/5"
           >
-            Login
-          </Link>
-          <Link
-            to="/signup"
-            className="rounded-full bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-300"
-          >
-            Signup
-          </Link>
-        </div>
+            <span className="text-base leading-none" aria-hidden="true">
+              ⎋
+            </span>
+            <span>Logout</span>
+          </button>
+        ) : (
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              to="/login"
+              className="rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:border-cyan-400/40 hover:bg-white/5"
+            >
+              Login
+            </Link>
+            <Link
+              to="/signup"
+              className="rounded-full bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-300"
+            >
+              Signup
+            </Link>
+          </div>
+        )}
       </div>
     </header>
   )
