@@ -7,6 +7,7 @@ import Dashboard from '../pages/Dashboard'
 import Login from '../pages/Login'
 import Signup from '../pages/Signup'
 import ProtectedUrl from '../pages/ProtectedUrl'
+import ShortUrlRedirect from '../pages/ShortUrlRedirect'
 
 export default function AppRoutes() {
   const { isAuthenticated } = useContext(AuthContext)
@@ -26,6 +27,7 @@ export default function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route path="/:shortCode" element={<ShortUrlRedirect />} />
         <Route path="*" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>
