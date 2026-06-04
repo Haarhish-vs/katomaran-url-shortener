@@ -5,6 +5,9 @@ import config from '../../config/env.js';
 export async function redirectUrl(req, res, next) {
 	try {
 		const { shortCode } = req.params || {};
+		const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+		const userAgent = req.headers['user-agent'];
+		
 		logger.info('[URL]', 'Redirect Request', { method: req.method, route: req.originalUrl, shortCode });
 
 		if (!shortCode) {
@@ -13,7 +16,7 @@ export async function redirectUrl(req, res, next) {
 			return next(err);
 		}
 
-		const result = await redirectUrlService(shortCode);
+		const result = await redirectUrlService(shortCode, ip, userAgent);
 
 		if (result.passwordRequired) {
 			const acceptHeader = req.headers.accept || '';

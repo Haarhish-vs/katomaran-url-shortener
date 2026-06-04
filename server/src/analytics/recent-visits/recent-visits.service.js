@@ -6,6 +6,12 @@ export async function getRecentVisits(queryWhere) {
 		select: {
 			id: true,
 			clickedAt: true,
+			deviceType: true,
+			browser: true,
+			operatingSystem: true,
+			country: true,
+			region: true,
+			city: true,
 			url: {
 				select: {
 					shortCode: true,

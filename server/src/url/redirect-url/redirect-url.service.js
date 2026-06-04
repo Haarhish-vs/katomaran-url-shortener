@@ -6,7 +6,7 @@ function validateShortCode(shortCode) {
 	return typeof shortCode === 'string' && /^[A-Za-z0-9\-_]+$/.test(shortCode);
 }
 
-export async function redirectUrlService(shortCode) {
+export async function redirectUrlService(shortCode, ip, userAgent) {
 	if (!validateShortCode(shortCode)) {
 		logger.warn('[URL]', 'Redirect Failed', { shortCode, reason: 'Invalid short code format' });
 		const err = new Error('Short code not found');
@@ -72,7 +72,7 @@ export async function redirectUrlService(shortCode) {
 		};
 	}
 
-	await recordVisit(url.id);
+	await recordVisit(url.id, ip, userAgent);
 	logger.success('[URL]', 'Redirect Success', { shortCode, urlId: url.id });
 
 	return {

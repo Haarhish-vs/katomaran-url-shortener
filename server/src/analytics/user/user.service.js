@@ -62,17 +62,67 @@ export async function getUserAnalytics({ userId, range, from, to }) {
 			expiresAt: u.expiresAt,
 			status: calculateStatus(u)
 		}))
-		// Filter out URLs with 0 clicks if we want to show only "top" ones, or keep them to show all. We'll keep them but they are ordered by desc clicks.
 		.filter(u => u.clicks > 0);
 
-	// If no URLs have clicks in this range, we might just want to return the most recently created or just the empty list
-	// Returning the empty list if no clicks is standard for Top URLs.
+	// ── Device, Browser, Location Aggregation ──────────────────────────
+	const [deviceGroups, browserGroups, countryGroups, cityGroups] = await Promise.all([
+		prisma.visit.groupBy({
+			by: ['deviceType'],
+			where: queryWhere,
+			_count: { _all: true },
+			orderBy: { _count: { deviceType: 'desc' } }
+		}),
+		prisma.visit.groupBy({
+			by: ['browser'],
+			where: queryWhere,
+			_count: { _all: true },
+			orderBy: { _count: { browser: 'desc' } }
+		}),
+		prisma.visit.groupBy({
+			by: ['country'],
+			where: queryWhere,
+			_count: { _all: true },
+			orderBy: { _count: { country: 'desc' } },
+			take: 10
+		}),
+		prisma.visit.groupBy({
+			by: ['city'],
+			where: queryWhere,
+			_count: { _all: true },
+			orderBy: { _count: { city: 'desc' } },
+			take: 10
+		})
+	]);
+
+	const deviceSummary = {};
+	for (const g of deviceGroups) {
+		deviceSummary[g.deviceType || 'Unknown'] = g._count._all;
+	}
+
+	const browserSummary = {};
+	for (const g of browserGroups) {
+		browserSummary[g.browser || 'Unknown'] = g._count._all;
+	}
+
+	const locationSummary = {
+		countries: countryGroups
+			.filter(g => g.country)
+			.map(g => ({ name: g.country, count: g._count._all })),
+		cities: cityGroups
+			.filter(g => g.city)
+			.map(g => ({ name: g.city, count: g._count._all }))
+	};
+
+	logger.info('[ANALYTICS]', 'Analytics Generated', { userId });
 
 	return {
 		summary,
 		timeline,
 		topUrls,
-		recentActivity
+		recentActivity,
+		deviceSummary,
+		browserSummary,
+		locationSummary
 	};
 }
 

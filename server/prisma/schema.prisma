@@ -45,4 +45,11 @@ model Visit {
   url        Url      @relation(fields: [urlId], references: [id])
 
   clickedAt  DateTime @default(now())
+
+  deviceType      String?  @default("Unknown")
+  browser         String?  @default("Unknown")
+  operatingSystem String?  @default("Unknown")
+  country         String?
+  region          String?
+  city            String?
 }
