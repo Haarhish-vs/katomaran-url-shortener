@@ -89,7 +89,7 @@ export default function Navbar() {
             <span className="grid h-8 w-8 place-items-center rounded-xl border border-cyan-400/30 bg-cyan-400/10 text-xs font-semibold text-cyan-200">
               K
             </span>
-            <span className="text-sm font-semibold tracking-wider uppercase text-cyan-200">Navigation</span>
+            <span className="text-sm font-semibold tracking-wider uppercase text-cyan-200">Katomaran</span>
           </div>
           <button 
             type="button" 
