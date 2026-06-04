@@ -45,4 +45,54 @@
   input {
     font: inherit;
   }
+
+  @media (max-width: 768px) {
+    html,
+    body {
+      overflow-x: hidden;
+      width: 100%;
+      position: relative;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Ensure scrollable elements work well on mobile */
+    .overflow-x-auto,
+    .overflow-y-auto,
+    .overflow-auto,
+    section,
+    main,
+    article {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    section {
+      overflow-y: auto;
+    }
+
+    /* Fallback for hardcoded widths */
+    [class*="w-["],
+    [class*="min-w-["] {
+      max-width: 100% !important;
+      min-width: 0 !important;
+    }
+    
+    /* Fix flexbox or grid layouts that don't wrap properly on small screens */
+    .flex:not(.flex-nowrap):not(.flex-col) {
+      flex-wrap: wrap;
+    }
+    
+    .grid {
+      max-width: 100%;
+    }
+    
+    /* Fix 100vh issues on mobile browsers like Safari */
+    .min-h-screen {
+      min-height: 100vh; /* Fallback */
+      min-height: 100dvh;
+    }
+    .h-screen {
+      height: 100vh; /* Fallback */
+      height: 100dvh;
+    }
+  }
 }
