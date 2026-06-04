@@ -8,6 +8,43 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
+function formatLocation(visit) {
+  const parts = [];
+  if (visit.city) parts.push(visit.city);
+  if (visit.country) parts.push(visit.country);
+  return parts.length > 0 ? parts.join(', ') : '—';
+}
+
+function formatDeviceBrowser(visit) {
+  const browser = visit.browser && visit.browser !== 'Unknown' ? visit.browser : null;
+  const os = visit.operatingSystem && visit.operatingSystem !== 'Unknown' ? visit.operatingSystem : null;
+  if (browser && os) return `${browser} / ${os}`;
+  if (browser) return browser;
+  if (os) return os;
+  return '—';
+}
+
+const FLAG_MAP = {
+  US: '🇺🇸', IN: '🇮🇳', GB: '🇬🇧', CA: '🇨🇦', DE: '🇩🇪', FR: '🇫🇷', JP: '🇯🇵',
+  AU: '🇦🇺', BR: '🇧🇷', KR: '🇰🇷', CN: '🇨🇳', RU: '🇷🇺', IT: '🇮🇹', ES: '🇪🇸',
+  MX: '🇲🇽', NL: '🇳🇱', SE: '🇸🇪', SG: '🇸🇬', AE: '🇦🇪', ZA: '🇿🇦',
+};
+
+function getFlag(countryCode) {
+  if (!countryCode) return '🌐';
+  return FLAG_MAP[countryCode.toUpperCase()] || '🌐';
+}
+
+const DEVICE_ICON = {
+  Desktop: '🖥️',
+  Mobile: '📱',
+  Tablet: '📱',
+};
+
+function getDeviceIcon(deviceType) {
+  return DEVICE_ICON[deviceType] || '🖥️';
+}
+
 export default function UserAnalyticsRecentActivity({ activities }) {
   if (!activities || activities.length === 0) {
     return (
@@ -42,6 +79,8 @@ export default function UserAnalyticsRecentActivity({ activities }) {
               <th className="py-3 pr-4">Time</th>
               <th className="py-3 pr-4">Short URL</th>
               <th className="py-3 pr-4">Original URL</th>
+              <th className="py-3 pr-4">Location</th>
+              <th className="py-3">Device / Browser</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
@@ -60,9 +99,17 @@ export default function UserAnalyticsRecentActivity({ activities }) {
                   )}
                 </td>
                 <td className="py-3.5 pr-4">
-                  <div className="max-w-[200px] truncate sm:max-w-xs md:max-w-md">
+                  <div className="max-w-[180px] truncate sm:max-w-xs">
                     {visit.url?.originalUrl || '-'}
                   </div>
+                </td>
+                <td className="py-3.5 pr-4 whitespace-nowrap">
+                  <span className="mr-1.5">{getFlag(visit.country)}</span>
+                  {formatLocation(visit)}
+                </td>
+                <td className="py-3.5 whitespace-nowrap">
+                  <span className="mr-1.5">{getDeviceIcon(visit.deviceType)}</span>
+                  {formatDeviceBrowser(visit)}
                 </td>
               </tr>
             ))}

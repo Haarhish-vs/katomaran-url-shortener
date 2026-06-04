@@ -5,6 +5,9 @@ import AnalyticsSummaryError from '../components/analytics/AnalyticsSummaryError
 import AnalyticsTimelineChart, { AnalyticsTimelineSkeleton } from '../components/analytics/AnalyticsTimelineChart';
 import AnalyticsTopUrls from '../components/analytics/AnalyticsTopUrls';
 import UserAnalyticsRecentActivity from '../components/analytics/UserAnalyticsRecentActivity';
+import DeviceAnalyticsCard from '../components/analytics/DeviceAnalyticsCard';
+import BrowserAnalyticsCard from '../components/analytics/BrowserAnalyticsCard';
+import LocationAnalyticsCard from '../components/analytics/LocationAnalyticsCard';
 import { fetchUserAnalytics } from '../services/analytics.api';
 
 function formatDateLabel(dateString) {
@@ -203,6 +206,13 @@ export default function UserAnalytics() {
             />
 
             <AnalyticsTopUrls urls={data.topUrls} />
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <DeviceAnalyticsCard deviceSummary={data.deviceSummary} />
+              <BrowserAnalyticsCard browserSummary={data.browserSummary} />
+            </div>
+
+            <LocationAnalyticsCard locationSummary={data.locationSummary} />
             
             <UserAnalyticsRecentActivity activities={data.recentActivity} />
           </div>
