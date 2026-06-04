@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import AnalyticsSummaryCards, { AnalyticsSummarySkeleton } from '../components/analytics/AnalyticsSummaryCards'
 import AnalyticsSummaryError from '../components/analytics/AnalyticsSummaryError'
+import AnalyticsTimelineChart, { AnalyticsTimelineSkeleton } from '../components/analytics/AnalyticsTimelineChart'
 import { fetchAnalytics, fetchAnalyticsSummary } from '../services/analytics.api'
 
 function formatDate(value) {
@@ -170,6 +171,10 @@ export default function Analytics() {
     summary.totalClicks === 0 &&
     !summary.lastVisit
 
+  const isTimelineEmpty = 
+    data && 
+    (!data.timeline || data.timeline.length === 0 || data.timeline.every(d => d.clicks === 0))
+
   const showCustomRangePlaceholder = dateFilter === 'custom' && (!customFrom || !customTo)
 
   return (
@@ -271,6 +276,7 @@ export default function Analytics() {
 
         {showCustomRangePlaceholder ? null : loading ? (
           <div className="space-y-6 animate-pulse">
+            <AnalyticsTimelineSkeleton />
             <div className="h-64 rounded-3xl border border-white/5 bg-slate-900/40" />
           </div>
         ) : error ? (
@@ -294,7 +300,15 @@ export default function Analytics() {
             </div>
           </section>
         ) : (
-          <section className="rounded-3xl border border-white/10 bg-slate-900/60 p-5 sm:p-6">
+          <div className="space-y-6">
+            <AnalyticsTimelineChart 
+              data={data} 
+              isEmpty={isTimelineEmpty} 
+              onRetry={handleRetry} 
+              error={error} 
+            />
+            
+            <section className="rounded-3xl border border-white/10 bg-slate-900/60 p-5 sm:p-6">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <h2 className="text-lg font-semibold text-white">Recent visit history</h2>
               <span className="text-xs text-slate-400">
@@ -343,7 +357,8 @@ export default function Analytics() {
                 </table>
               </div>
             )}
-          </section>
+            </section>
+          </div>
         )}
       </main>
     </div>

@@ -4,6 +4,7 @@ import { buildDateFilter } from '../date-filter/date-filter.service.js';
 import { getClickCount } from '../click-count/click-count.service.js';
 import { getRecentVisits } from '../recent-visits/recent-visits.service.js';
 import { getLastVisitTime } from '../last-visit/last-visit.service.js';
+import { getTimeline } from '../chart/chart.service.js';
 
 export async function recordVisit(urlId) {
 	return prisma.visit.create({
@@ -56,14 +57,16 @@ export async function getUrlAnalytics({ shortCode, userId, range, from, to }) {
 		...(Object.keys(dateFilter).length > 0 ? { clickedAt: dateFilter } : {})
 	};
 
-	const [totalClickCount, recentVisitHistory] = await Promise.all([
+	const [totalClickCount, recentVisitHistory, timeline] = await Promise.all([
 		getClickCount(queryWhere),
-		getRecentVisits(queryWhere)
+		getRecentVisits(queryWhere),
+		getTimeline(queryWhere)
 	]);
 
 	return {
 		totalClickCount,
 		lastVisitedTime: getLastVisitTime(recentVisitHistory),
-		recentVisitHistory
+		recentVisitHistory,
+		timeline
 	};
 }
