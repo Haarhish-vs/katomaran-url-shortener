@@ -52,4 +52,6 @@ model Visit {
   country         String?
   region          String?
   city            String?
+  ipAddress       String?
+  referrer        String?
 }

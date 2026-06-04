@@ -68,12 +68,14 @@ async function geolocateAndUpdate(visitId, ip) {
 	}
 }
 
-export async function recordVisit(urlId, ip, userAgent) {
+export async function recordVisit(urlId, ip, userAgent, referrer) {
 	const { deviceType, browser, operatingSystem } = parseUserAgent(userAgent);
 
-	logger.info('[ANALYTICS]', 'Device Classified', { deviceType });
-	logger.info('[ANALYTICS]', 'Browser Classified', { browser });
-	logger.info('[ANALYTICS]', 'Visit Captured', { urlId });
+	// Clean the raw IP for storage
+	const cleanIp = (ip || '').split(',')[0].trim().replace(/^::ffff:/, '') || null;
+
+	logger.info('[ANALYTICS]', 'Device Classified', { deviceType, browser, operatingSystem });
+	logger.info('[ANALYTICS]', 'Visit Captured', { urlId, ip: cleanIp, referrer });
 
 	const visit = await prisma.visit.create({
 		data: {
@@ -81,6 +83,8 @@ export async function recordVisit(urlId, ip, userAgent) {
 			deviceType,
 			browser,
 			operatingSystem,
+			ipAddress: cleanIp,
+			referrer: referrer || null,
 			country: null,
 			region: null,
 			city: null
@@ -88,7 +92,7 @@ export async function recordVisit(urlId, ip, userAgent) {
 	});
 
 	// Fire-and-forget geolocation — does not block the redirect
-	geolocateAndUpdate(visit.id, ip).catch(() => {});
+	geolocateAndUpdate(visit.id, cleanIp).catch(() => {});
 
 	return visit;
 }

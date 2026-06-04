@@ -7,6 +7,7 @@ export async function redirectUrl(req, res, next) {
 		const { shortCode } = req.params || {};
 		const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 		const userAgent = req.headers['user-agent'];
+		const referrer = req.headers['referer'] || req.headers['referrer'] || null;
 		
 		logger.info('[URL]', 'Redirect Request', { method: req.method, route: req.originalUrl, shortCode });
 
@@ -16,7 +17,7 @@ export async function redirectUrl(req, res, next) {
 			return next(err);
 		}
 
-		const result = await redirectUrlService(shortCode, ip, userAgent);
+		const result = await redirectUrlService(shortCode, ip, userAgent, referrer);
 
 		if (result.passwordRequired) {
 			const acceptHeader = req.headers.accept || '';
