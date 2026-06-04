@@ -1,7 +1,7 @@
 import prisma from '../../config/db.js';
 import logger from '../../utils/logger.js';
 import geoip from 'geoip-lite';
-import UAParser from 'ua-parser-js';
+import { UAParser } from 'ua-parser-js';
 import { buildDateFilter } from '../date-filter/date-filter.service.js';
 import { getClickCount } from '../click-count/click-count.service.js';
 import { getRecentVisits } from '../recent-visits/recent-visits.service.js';
