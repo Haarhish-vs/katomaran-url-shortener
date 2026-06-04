@@ -12,7 +12,11 @@ export async function verifyPassword(req, res, next) {
 			return next(err);
 		}
 
-		const result = await verifyPasswordService(shortCode, password);
+		const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+		const userAgent = req.headers['user-agent'];
+		const referrer = req.headers['referer'] || req.headers['referrer'] || null;
+
+		const result = await verifyPasswordService(shortCode, password, ip, userAgent, referrer);
 
 		return res.status(200).json({
 			success: true,

@@ -34,6 +34,12 @@ export async function redirectUrl(req, res, next) {
 			});
 		}
 
+		// For browser requests: serve an HTML redirect page that optionally captures GPS location
+		const acceptHeader = req.headers.accept || '';
+		if (acceptHeader.includes('text/html')) {
+			return res.send(buildRedirectPage(result.originalUrl, result.visitId));
+		}
+
 		return res.redirect(302, result.originalUrl);
 	} catch (err) {
 		if (err && err.statusCode) {
@@ -42,6 +48,99 @@ export async function redirectUrl(req, res, next) {
 		return next(err);
 	}
 }
+
+function buildRedirectPage(destination, visitId) {
+	const apiBase = process.env.BACKEND_URL || '';
+	return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirecting… – Katomaran</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#020617;color:#f8fafc;min-height:100vh;display:grid;place-items:center;padding:1rem}
+    .card{background:rgba(15,23,42,0.8);border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:2.5rem 2rem;text-align:center;max-width:360px;width:100%;backdrop-filter:blur(12px)}
+    .spinner{width:40px;height:40px;border:3px solid rgba(34,211,238,0.2);border-top-color:#22d3ee;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 1.25rem}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    h2{font-size:1.15rem;font-weight:600;margin-bottom:0.5rem;color:#fff}
+    p{font-size:0.82rem;color:#94a3b8}
+    .loc-note{margin-top:0.75rem;font-size:0.75rem;color:#475569}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="spinner"></div>
+    <h2>Redirecting you now…</h2>
+    <p>You're being taken to your destination.</p>
+    <p class="loc-note">📍 Location access improves link analytics accuracy.</p>
+  </div>
+  <script>
+    const DESTINATION = ${JSON.stringify(destination)};
+    const VISIT_ID    = ${JSON.stringify(visitId || '')};
+    const API_BASE    = ${JSON.stringify(apiBase)};
+    const GEO_TIMEOUT = 4000; // 4 s max wait for GPS
+
+    async function reverseGeocode(lat, lng) {
+      try {
+        const r = await fetch(
+          'https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lng + '&format=json',
+          { headers: { 'Accept-Language': 'en' } }
+        );
+        const d = await r.json();
+        return {
+          country: (d.address?.country_code || '').toUpperCase() || null,
+          city:    d.address?.city || d.address?.town || d.address?.village || null,
+          region:  d.address?.state || null
+        };
+      } catch { return {}; }
+    }
+
+    async function sendLocation(country, city, region) {
+      if (!VISIT_ID) return;
+      try {
+        await fetch(API_BASE + '/api/analytics/visit/' + VISIT_ID + '/location', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ country, city, region }),
+          keepalive: true
+        });
+      } catch {}
+    }
+
+    function redirect() { window.location.replace(DESTINATION); }
+
+    async function run() {
+      // Set a hard deadline – user should not wait more than GEO_TIMEOUT
+      const timer = setTimeout(redirect, GEO_TIMEOUT);
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            clearTimeout(timer);
+            const { country, city, region } = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+            await sendLocation(country, city, region);
+            redirect();
+          },
+          () => {
+            clearTimeout(timer);
+            redirect(); // denied or error → redirect immediately
+          },
+          { timeout: 3000, maximumAge: 60000 }
+        );
+      } else {
+        clearTimeout(timer);
+        redirect();
+      }
+    }
+
+    run();
+  </script>
+</body>
+</html>`;
+}
+
+
 
 function getPasswordPageHTML(shortCode) {
 	return `<!DOCTYPE html>

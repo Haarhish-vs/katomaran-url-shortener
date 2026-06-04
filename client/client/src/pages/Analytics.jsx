@@ -4,7 +4,47 @@ import Navbar from '../components/Navbar'
 import AnalyticsSummaryCards, { AnalyticsSummarySkeleton } from '../components/analytics/AnalyticsSummaryCards'
 import AnalyticsSummaryError from '../components/analytics/AnalyticsSummaryError'
 import AnalyticsTimelineChart, { AnalyticsTimelineSkeleton } from '../components/analytics/AnalyticsTimelineChart'
+import DeviceAnalyticsCard from '../components/analytics/DeviceAnalyticsCard'
+import BrowserAnalyticsCard from '../components/analytics/BrowserAnalyticsCard'
+import LocationAnalyticsCard from '../components/analytics/LocationAnalyticsCard'
 import { fetchAnalytics, fetchAnalyticsSummary } from '../services/analytics.api'
+
+const FLAG_MAP = {
+  US: '🇺🇸', IN: '🇮🇳', GB: '🇬🇧', CA: '🇨🇦', DE: '🇩🇪', FR: '🇫🇷', JP: '🇯🇵',
+  AU: '🇦🇺', BR: '🇧🇷', KR: '🇰🇷', CN: '🇨🇳', RU: '🇷🇺', IT: '🇮🇹', ES: '🇪🇸',
+  MX: '🇲🇽', NL: '🇳🇱', SE: '🇸🇪', SG: '🇸🇬', AE: '🇦🇪', ZA: '🇿🇦',
+};
+
+function getFlag(countryCode) {
+  if (!countryCode) return '🌐';
+  return FLAG_MAP[countryCode.toUpperCase()] || '🌐';
+}
+
+const DEVICE_ICON = {
+  Desktop: '🖥️',
+  Mobile: '📱',
+  Tablet: '📟',
+};
+
+function getDeviceIcon(deviceType) {
+  return DEVICE_ICON[deviceType] || '❓';
+}
+
+function formatLocation(visit) {
+  const parts = [];
+  if (visit.city) parts.push(visit.city);
+  if (visit.country) parts.push(visit.country);
+  return parts.length > 0 ? parts.join(', ') : '—';
+}
+
+function formatDeviceBrowser(visit) {
+  const browser = visit.browser && visit.browser !== 'Unknown' ? visit.browser : null;
+  const os = visit.operatingSystem && visit.operatingSystem !== 'Unknown' ? visit.operatingSystem : null;
+  if (browser && os) return `${browser} / ${os}`;
+  if (browser) return browser;
+  if (os) return os;
+  return '—';
+}
 
 function formatDate(value) {
   if (!value) return 'Never'
@@ -307,6 +347,13 @@ export default function Analytics() {
               onRetry={handleRetry} 
               error={error} 
             />
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <DeviceAnalyticsCard deviceSummary={data?.deviceSummary} />
+              <BrowserAnalyticsCard browserSummary={data?.browserSummary} />
+            </div>
+
+            <LocationAnalyticsCard locationSummary={data?.locationSummary} />
             
             <section className="rounded-3xl border border-white/10 bg-slate-900/60 p-5 sm:p-6">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
@@ -341,16 +388,26 @@ export default function Analytics() {
                   <thead>
                     <tr className="border-b border-white/10 text-xs font-semibold uppercase tracking-wider text-slate-400">
                       <th className="py-3 pr-4">Click #</th>
-                      <th className="py-3">Visited at</th>
+                      <th className="py-3 pr-4">Visited at</th>
+                      <th className="py-3 pr-4">Location</th>
+                      <th className="py-3">Device / Browser</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
                     {data.recentVisitHistory.map((visit, index) => (
-                      <tr key={visit.id}>
+                      <tr key={visit.id} className="hover:bg-white/5 transition-colors">
                         <td className="py-3.5 pr-4 font-mono font-medium text-cyan-300">
                           #{data.recentVisitHistory.length - index}
                         </td>
-                        <td className="py-3.5 text-slate-200">{formatDate(visit.clickedAt)}</td>
+                        <td className="py-3.5 pr-4 text-slate-200 whitespace-nowrap">{formatDate(visit.clickedAt)}</td>
+                        <td className="py-3.5 pr-4 whitespace-nowrap">
+                          <span className="mr-1.5">{getFlag(visit.country)}</span>
+                          {formatLocation(visit)}
+                        </td>
+                        <td className="py-3.5 whitespace-nowrap">
+                          <span className="mr-1.5">{getDeviceIcon(visit.deviceType)}</span>
+                          {formatDeviceBrowser(visit)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

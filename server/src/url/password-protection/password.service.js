@@ -3,7 +3,7 @@ import logger from '../../utils/logger.js';
 import { comparePassword } from '../../utils/hash.js';
 import { recordVisit } from '../../analytics/overview/overview.service.js';
 
-export async function verifyPasswordService(shortCode, password) {
+export async function verifyPasswordService(shortCode, password, ip, userAgent, referrer) {
 	if (!shortCode) {
 		const err = new Error('Short code is required');
 		err.statusCode = 400;
@@ -79,7 +79,7 @@ export async function verifyPasswordService(shortCode, password) {
 		throw err;
 	}
 
-	await recordVisit(url.id);
+	await recordVisit(url.id, ip, userAgent, referrer);
 	logger.success('[PASSWORD_PROTECTION]', 'Password Verification Success', { shortCode, urlId: url.id });
 
 	return {

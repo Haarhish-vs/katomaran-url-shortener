@@ -72,11 +72,12 @@ export async function redirectUrlService(shortCode, ip, userAgent, referrer) {
 		};
 	}
 
-	await recordVisit(url.id, ip, userAgent, referrer);
+	const visit = await recordVisit(url.id, ip, userAgent, referrer);
 	logger.success('[URL]', 'Redirect Success', { shortCode, urlId: url.id });
 
 	return {
 		originalUrl: url.originalUrl,
 		shortCode: url.shortCode,
+		visitId: visit.id
 	};
 }
