@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/((?!assets/|favicon.svg).*)",
-      "destination": "/client/client/dist/index.html"
+      "destination": "/index.html"
     }
   ]
 }
