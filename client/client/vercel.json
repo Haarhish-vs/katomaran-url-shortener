@@ -1,6 +1,4 @@
 {
-  "buildCommand": "cd client/client && npm install && npm run build",
-  "outputDirectory": "client/client/dist",
   "rewrites": [
     {
       "source": "/((?!assets/|favicon\\.svg).*)",
