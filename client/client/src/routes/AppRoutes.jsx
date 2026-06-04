@@ -8,6 +8,7 @@ import Login from '../pages/Login'
 import Signup from '../pages/Signup'
 import ProtectedUrl from '../pages/ProtectedUrl'
 import ShortUrlRedirect from '../pages/ShortUrlRedirect'
+import UserAnalytics from '../pages/UserAnalytics'
 
 export default function AppRoutes() {
   const { isAuthenticated } = useContext(AuthContext)
@@ -19,6 +20,14 @@ export default function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/protected/:shortCode" element={<ProtectedUrl />} />
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <UserAnalytics />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/analytics/:shortCode"
           element={

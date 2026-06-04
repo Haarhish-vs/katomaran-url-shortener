@@ -111,6 +111,15 @@ export default function Navbar() {
             Dashboard
           </Link>
           
+          <Link 
+            to="/analytics" 
+            className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${location.pathname === '/analytics' ? 'bg-cyan-400/10 text-cyan-200 border border-cyan-400/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+            onClick={() => setIsMenuOpen(false)}
+          >
+            <span className="text-lg">📊</span>
+            Analytics
+          </Link>
+          
           {shortCode && (
             <Link 
               to={`/analytics/${shortCode}`}

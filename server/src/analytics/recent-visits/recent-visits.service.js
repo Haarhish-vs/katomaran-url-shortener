@@ -5,7 +5,13 @@ export async function getRecentVisits(queryWhere) {
 		where: queryWhere,
 		select: {
 			id: true,
-			clickedAt: true
+			clickedAt: true,
+			url: {
+				select: {
+					shortCode: true,
+					originalUrl: true
+				}
+			}
 		},
 		orderBy: {
 			clickedAt: 'desc'
