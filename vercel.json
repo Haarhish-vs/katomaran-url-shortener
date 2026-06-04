@@ -2,8 +2,8 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/((?!assets/|favicon.svg).*)",
+      "destination": "/client/client/dist/index.html"
     }
   ]
 }
