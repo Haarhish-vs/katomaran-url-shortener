@@ -1,5 +1,5 @@
-import prisma from '../../../config/db.js';
-import logger from '../../../utils/logger.js';
+import prisma from '../../config/db.js';
+import logger from '../../utils/logger.js';
 import { getAnalyticsSummary } from '../summary/summary.service.js';
 import { buildDateFilter } from '../date-filter/date-filter.service.js';
 import { getTimeline } from '../chart/chart.service.js';

@@ -1,5 +1,5 @@
 import { getUserAnalytics } from './user.service.js';
-import logger from '../../../utils/logger.js';
+import logger from '../../utils/logger.js';
 
 export async function getGlobalUserAnalytics(req, res, next) {
 	try {
