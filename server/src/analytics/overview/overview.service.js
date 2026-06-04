@@ -1,71 +1,98 @@
 import prisma from '../../config/db.js';
 import logger from '../../utils/logger.js';
-import geoip from 'geoip-lite';
-import { UAParser } from 'ua-parser-js';
 import { buildDateFilter } from '../date-filter/date-filter.service.js';
 import { getClickCount } from '../click-count/click-count.service.js';
 import { getRecentVisits } from '../recent-visits/recent-visits.service.js';
 import { getLastVisitTime } from '../last-visit/last-visit.service.js';
 import { getTimeline } from '../chart/chart.service.js';
 
-export async function recordVisit(urlId, ip, userAgent) {
-	let deviceType = 'Unknown';
+
+function parseUserAgent(ua) {
+	if (!ua) return { deviceType: 'Unknown', browser: 'Unknown', operatingSystem: 'Unknown' };
+
+	// Device
+	let deviceType = 'Desktop';
+	if (/ipad|tablet|kindle|playbook|silk|(android(?!.*mobile))/i.test(ua)) {
+		deviceType = 'Tablet';
+	} else if (/mobile|android|iphone|ipod|blackberry|opera mini|iemobile|windows phone/i.test(ua)) {
+		deviceType = 'Mobile';
+	}
+
+	// Browser — order matters (Edge before Chrome, Opera before Chrome)
 	let browser = 'Unknown';
+	if (/edg\//i.test(ua)) browser = 'Edge';
+	else if (/opr\/|opera/i.test(ua)) browser = 'Opera';
+	else if (/samsungbrowser/i.test(ua)) browser = 'Samsung';
+	else if (/chrome\/\d/i.test(ua)) browser = 'Chrome';
+	else if (/firefox\/\d/i.test(ua)) browser = 'Firefox';
+	else if (/safari\/\d/i.test(ua) && !/chrome/i.test(ua)) browser = 'Safari';
+
+	// OS
 	let operatingSystem = 'Unknown';
-	let country = null;
-	let region = null;
-	let city = null;
+	if (/windows nt/i.test(ua)) operatingSystem = 'Windows';
+	else if (/(iphone|ipad|ipod)/i.test(ua)) operatingSystem = 'iOS';
+	else if (/android/i.test(ua)) operatingSystem = 'Android';
+	else if (/mac os x/i.test(ua)) operatingSystem = 'macOS';
+	else if (/linux/i.test(ua)) operatingSystem = 'Linux';
 
-	if (userAgent) {
-		const parser = new UAParser(userAgent);
-		const uaResult = parser.getResult();
-		
-		if (uaResult.device && uaResult.device.type) {
-			deviceType = uaResult.device.type.charAt(0).toUpperCase() + uaResult.device.type.slice(1);
-			if (deviceType !== 'Mobile' && deviceType !== 'Tablet') {
-				deviceType = 'Desktop'; // normalize smarttv/console
-			}
-		} else if (uaResult.os && uaResult.os.name) {
-			deviceType = 'Desktop';
+	return { deviceType, browser, operatingSystem };
+}
+
+// ── Async IP Geolocation (fire-and-forget) ────────────────────────────────
+async function geolocateAndUpdate(visitId, ip) {
+	try {
+		const cleanIp = (ip || '').split(',')[0].trim().replace(/^::ffff:/, '');
+		// Skip private/loopback IPs
+		if (!cleanIp || /^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.|::1|localhost)/i.test(cleanIp)) {
+			logger.info('[ANALYTICS]', 'Location Skipped', { reason: 'private IP', ip: cleanIp });
+			return;
 		}
 
-		if (uaResult.browser && uaResult.browser.name) {
-			browser = uaResult.browser.name;
-		}
-		if (uaResult.os && uaResult.os.name) {
-			operatingSystem = uaResult.os.name;
-		}
+		const res = await fetch(`http://ip-api.com/json/${cleanIp}?fields=country,countryCode,city,regionName`);
+		if (!res.ok) return;
 
-		logger.info('[ANALYTICS]', 'Device Classified', { deviceType });
-		logger.info('[ANALYTICS]', 'Browser Classified', { browser });
+		const geo = await res.json();
+		if (geo && geo.countryCode) {
+			await prisma.visit.update({
+				where: { id: visitId },
+				data: {
+					country: geo.countryCode || null,
+					region: geo.regionName || null,
+					city: geo.city || null
+				}
+			});
+			logger.info('[ANALYTICS]', 'Location Captured', { country: geo.countryCode, city: geo.city });
+		}
+	} catch (err) {
+		logger.info('[ANALYTICS]', 'Location Lookup Failed', { error: err.message });
 	}
+}
 
-	if (ip) {
-		// Clean ip format for local/ipv6
-		const cleanIp = ip.split(',')[0].trim();
-		const geo = geoip.lookup(cleanIp);
-		if (geo) {
-			country = geo.country || null;
-			region = geo.region || null;
-			city = geo.city || null;
-			logger.info('[ANALYTICS]', 'Location Captured', { country, city });
-		}
-	}
+export async function recordVisit(urlId, ip, userAgent) {
+	const { deviceType, browser, operatingSystem } = parseUserAgent(userAgent);
 
+	logger.info('[ANALYTICS]', 'Device Classified', { deviceType });
+	logger.info('[ANALYTICS]', 'Browser Classified', { browser });
 	logger.info('[ANALYTICS]', 'Visit Captured', { urlId });
 
-	return prisma.visit.create({
+	const visit = await prisma.visit.create({
 		data: {
 			urlId,
 			deviceType,
 			browser,
 			operatingSystem,
-			country,
-			region,
-			city
+			country: null,
+			region: null,
+			city: null
 		}
 	});
+
+	// Fire-and-forget geolocation — does not block the redirect
+	geolocateAndUpdate(visit.id, ip).catch(() => {});
+
+	return visit;
 }
+
 
 function validateShortCode(shortCode) {
 	return typeof shortCode === 'string' && /^[A-Za-z0-9]+$/.test(shortCode);
