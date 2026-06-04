@@ -131,14 +131,7 @@ export default function UrlTable({
                   >
                     QR Code
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => onOpenAnalytics(url.shortCode)}
-                    disabled={activeActionId === url.id}
-                    className="rounded-full border border-cyan-400/30 px-3 py-2 text-sm font-medium text-cyan-200 transition-colors hover:bg-cyan-400/10 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Analytics
-                  </button>
+
                   <button
                     type="button"
                     onClick={() => onDelete(url)}
