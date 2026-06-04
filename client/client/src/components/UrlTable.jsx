@@ -12,7 +12,6 @@ export default function UrlTable({
   activeActionId,
   onCopy,
   onDelete,
-  onOpenAnalytics,
   onAuthRequired,
   onShowQr,
 }) {

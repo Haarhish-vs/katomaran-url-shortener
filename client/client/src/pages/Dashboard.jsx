@@ -263,15 +263,6 @@ export default function Dashboard() {
     setPendingDeleteUrl(null)
   }
 
-  const handleOpenAnalytics = (shortCode) => {
-    if (!isAuthenticated) {
-      openAuthToast('Please sign in to continue')
-      return
-    }
-
-    navigate(`/analytics/${shortCode}`)
-  }
-
   return (
     <div className="min-h-screen overflow-x-hidden">
       <Navbar />
@@ -389,7 +380,6 @@ export default function Dashboard() {
             activeActionId={activeActionId}
             onCopy={handleCopy}
             onDelete={handleDelete}
-            onOpenAnalytics={handleOpenAnalytics}
             onAuthRequired={openAuthToast}
             onShowQr={setActiveQrUrl}
           />
