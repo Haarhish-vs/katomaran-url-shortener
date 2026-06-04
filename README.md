@@ -366,13 +366,12 @@ The project followed a multi-phase AI-assisted implementation plan:
 - **Responsive Dashboard Assembly**: Implemented interactive UI components, integrating reusable breakdown metric charts for both individual links and workspace analytics.
 
 ---
-
 ## 19. Demo Video
 
-Submission requires a demonstration video.
+A complete walkthrough of the Katomaran URL Shortener, including authentication, URL management, analytics, QR code generation, and deployment, can be viewed below:
 
-Watch the Katomaran URL Shortener walkthrough:
-[Watch Demo Video](https://www.youtube.com/watch?v=dQw4w9WgXcQ) *(Placeholder - will update later)*
+**Demo Video:** https://youtu.be/H-UFbi1VIQQ
+
 
 ---
 
