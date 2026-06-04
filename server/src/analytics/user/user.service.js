@@ -65,7 +65,7 @@ export async function getUserAnalytics({ userId, range, from, to }) {
 		.filter(u => u.clicks > 0);
 
 	// ── Device, Browser, Location Aggregation ──────────────────────────
-	const [deviceGroups, browserGroups, countryGroups, cityGroups] = await Promise.all([
+	const [deviceGroups, browserGroups, countryGroups] = await Promise.all([
 		prisma.visit.groupBy({
 			by: ['deviceType'],
 			where: queryWhere,
@@ -84,13 +84,6 @@ export async function getUserAnalytics({ userId, range, from, to }) {
 			_count: { _all: true },
 			orderBy: { _count: { country: 'desc' } },
 			take: 10
-		}),
-		prisma.visit.groupBy({
-			by: ['city'],
-			where: queryWhere,
-			_count: { _all: true },
-			orderBy: { _count: { city: 'desc' } },
-			take: 10
 		})
 	]);
 
@@ -107,10 +100,7 @@ export async function getUserAnalytics({ userId, range, from, to }) {
 	const locationSummary = {
 		countries: countryGroups
 			.filter(g => g.country)
-			.map(g => ({ name: g.country, count: g._count._all })),
-		cities: cityGroups
-			.filter(g => g.city)
-			.map(g => ({ name: g.city, count: g._count._all }))
+			.map(g => ({ name: g.country, count: g._count._all }))
 	};
 
 	logger.info('[ANALYTICS]', 'Analytics Generated', { userId });

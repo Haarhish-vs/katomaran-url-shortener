@@ -8,11 +8,37 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
+const COUNTRY_NAMES = {
+  US: 'United States',
+  IN: 'India',
+  GB: 'United Kingdom',
+  CA: 'Canada',
+  DE: 'Germany',
+  FR: 'France',
+  JP: 'Japan',
+  AU: 'Australia',
+  BR: 'Brazil',
+  KR: 'South Korea',
+  CN: 'China',
+  RU: 'Russia',
+  IT: 'Italy',
+  ES: 'Spain',
+  MX: 'Mexico',
+  NL: 'Netherlands',
+  SE: 'Sweden',
+  SG: 'Singapore',
+  AE: 'United Arab Emirates',
+  ZA: 'South Africa',
+};
+
+function getCountryName(code) {
+  if (!code) return '';
+  const upper = code.toUpperCase();
+  return COUNTRY_NAMES[upper] || upper;
+}
+
 function formatLocation(visit) {
-  const parts = [];
-  if (visit.city) parts.push(visit.city);
-  if (visit.country) parts.push(visit.country);
-  return parts.length > 0 ? parts.join(', ') : '—';
+  return visit.country ? getCountryName(visit.country) : '—';
 }
 
 function formatDeviceBrowser(visit) {

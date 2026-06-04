@@ -131,7 +131,7 @@ export async function getUrlAnalytics({ shortCode, userId, range, from, to }) {
 		...(Object.keys(dateFilter).length > 0 ? { clickedAt: dateFilter } : {})
 	};
 
-	const [totalClickCount, recentVisitHistory, timeline, deviceGroups, browserGroups, countryGroups, cityGroups] = await Promise.all([
+	const [totalClickCount, recentVisitHistory, timeline, deviceGroups, browserGroups, countryGroups] = await Promise.all([
 		getClickCount(queryWhere),
 		getRecentVisits(queryWhere),
 		getTimeline(queryWhere),
@@ -153,13 +153,6 @@ export async function getUrlAnalytics({ shortCode, userId, range, from, to }) {
 			_count: { _all: true },
 			orderBy: { _count: { country: 'desc' } },
 			take: 10
-		}),
-		prisma.visit.groupBy({
-			by: ['city'],
-			where: queryWhere,
-			_count: { _all: true },
-			orderBy: { _count: { city: 'desc' } },
-			take: 10
 		})
 	]);
 
@@ -176,10 +169,7 @@ export async function getUrlAnalytics({ shortCode, userId, range, from, to }) {
 	const locationSummary = {
 		countries: countryGroups
 			.filter(g => g.country)
-			.map(g => ({ name: g.country, count: g._count._all })),
-		cities: cityGroups
-			.filter(g => g.city)
-			.map(g => ({ name: g.city, count: g._count._all }))
+			.map(g => ({ name: g.country, count: g._count._all }))
 	};
 
 	return {
