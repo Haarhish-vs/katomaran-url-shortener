@@ -135,12 +135,12 @@ export default function CreateLinkModal({ isOpen, onClose, onCreated }) {
       style={{ animation: 'fadeIn 200ms ease-out' }}
     >
       <div
-        className="relative w-full max-w-lg rounded-3xl border border-white/10 bg-slate-900 shadow-2xl shadow-slate-950/50"
+        className="relative w-full max-w-lg max-h-[100dvh] sm:max-h-[90vh] flex flex-col rounded-2xl sm:rounded-3xl border border-white/10 bg-slate-900 shadow-2xl shadow-slate-950/50"
         style={{ animation: 'slideUp 300ms ease-out' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 pt-6 pb-0">
+        <div className="px-5 sm:px-6 pt-5 sm:pt-6 pb-0 shrink-0">
           <div className="flex items-center justify-between mb-1.5">
             <div className="inline-flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
@@ -170,7 +170,7 @@ export default function CreateLinkModal({ isOpen, onClose, onCreated }) {
         </div>
 
         {/* Body */}
-        <div className="px-6 pb-6">
+        <div className="px-5 sm:px-6 pb-5 sm:pb-6 overflow-y-auto overflow-x-hidden">
           {error ? (
             <ErrorView
               message={error}
