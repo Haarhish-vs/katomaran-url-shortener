@@ -38,7 +38,7 @@ export async function getUserAnalytics({ userId, range, from, to }) {
 			_count: {
 				select: {
 					visits: {
-						where: Object.keys(dateFilter).length > 0 ? dateFilter : undefined
+						where: Object.keys(dateFilter).length > 0 ? { clickedAt: dateFilter } : undefined
 					}
 				}
 			}
