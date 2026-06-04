@@ -123,7 +123,7 @@ export default function Signup() {
 
       <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col justify-center px-4 py-8 sm:px-6 lg:px-8">
         <section className="grid gap-6 overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 shadow-2xl shadow-slate-950/30 lg:grid-cols-[1fr_0.9fr]">
-          <div className="flex flex-col justify-between gap-8 border-b border-white/10 p-6 sm:p-8 lg:border-b-0 lg:border-r">
+          <div className="flex flex-col justify-center gap-8 border-b border-white/10 p-6 sm:p-8 lg:border-b-0 lg:border-r">
             <div className="inline-flex w-fit items-center rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">
               Katomaran URL Shortener
             </div>
@@ -135,21 +135,6 @@ export default function Signup() {
               <p className="max-w-xl text-base leading-7 text-slate-300 sm:text-lg">
                 Manage short links, view analytics, and keep everything organized in one clean workspace.
               </p>
-            </div>
-
-            <div className="grid gap-3 text-sm text-slate-400 sm:grid-cols-3">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="font-semibold text-white">Email</p>
-                <p className="mt-1">Use a valid address to create your account.</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="font-semibold text-white">Password</p>
-                <p className="mt-1">Minimum 8 characters for a secure signup.</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="font-semibold text-white">Access</p>
-                <p className="mt-1">You’ll be signed in and sent to the dashboard.</p>
-              </div>
             </div>
           </div>
 
