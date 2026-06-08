@@ -49,7 +49,7 @@ Katomaran URL Shortener is a lightweight link manager built with React, Node.js,
 - **Database**: PostgreSQL (Prisma adapter)
 - **Authentication**: JWT, bcrypt password hashing
 - **Deployment**: Vercel (Frontend), Render (Backend / Database)
-- **Libraries**: `ua-parser-js` (UA parsing), `geoip-lite` (Offline IP Geolocation), `qrcode` (QR code generation)
+- **Libraries**: `geoip-lite` (Offline IP Geolocation), `qrcode` (QR code generation)
 
 ---
 
@@ -76,7 +76,7 @@ graph TD
     FE -->|API Requests with JWT| BE
     BE -->|Query / Mutate| DB[(PostgreSQL Database)]
     BE -->|Lookup IP Geolocation| GI[geoip-lite Offline Library]
-    BE -->|Classify Browser/OS| UA[ua-parser-js]
+    BE -->|Classify Browser/OS| UA[Regex UA Parsing]
 ```
 
 ---
@@ -244,8 +244,8 @@ katomaran-url-shortener/
 │   │   ├── url/                # Redirection, password checks, link generation
 │   │   └── server.js           # Server initializer
 │   ├── package.json
-│   └── vercel.json             # Vercel Serverless configuration
 └── README.md
+├── vercel.json                 # Vercel Serverless configuration
 ```
 
 ---
@@ -375,16 +375,4 @@ A complete walkthrough of the Katomaran URL Shortener, including authentication,
 
 ---
 
-## 20. Future Improvements
-
-- **Webhooks & Integrations**: Deliver real-time visit notification payloads to user-configured webhook URLs.
-- **Advanced API Keys**: Allow developers to generate secure API tokens to shorten URLs programmatically.
-- **Bulk Import**: Support CSV/JSON upload of long URLs to shorten multiple links at once.
-
----
-
-## 21. License
-Open-source software licensed under the MIT License.
-
----
 This project is a part of a hackathon run by https://katomaran.com

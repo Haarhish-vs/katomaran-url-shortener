@@ -1,5 +1,3 @@
-import crypto from 'crypto';
-
 const ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 function encodeBigIntToBase62(num) {
@@ -22,17 +20,4 @@ export function encodeBuffer(buf) {
 	return encodeBigIntToBase62(n);
 }
 
-export function generateRandomBase62(length = 8) {
-	const bytes = crypto.randomBytes(Math.ceil((length * Math.log2(62)) / 8));
-	let encoded = encodeBuffer(bytes);
-	// Ensure the returned string has at least `length` characters
-	if (encoded.length >= length) return encoded.slice(0, length);
-	// pad by generating more if necessary
-	while (encoded.length < length) {
-		const extra = encodeBuffer(crypto.randomBytes(2));
-		encoded += extra;
-	}
-	return encoded.slice(0, length);
-}
-
-export default { encodeBuffer, generateRandomBase62 };
+export default { encodeBuffer };

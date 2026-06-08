@@ -61,3 +61,5 @@ export default function DeviceAnalyticsCard({ deviceSummary }) {
     </div>
   );
 }
+
+
